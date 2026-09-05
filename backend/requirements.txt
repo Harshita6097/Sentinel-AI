@@ -1,8 +1,8 @@
-fastapi==0.111.0
-uvicorn[standard]==0.29.0
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
 python-dotenv==1.0.1
-pydantic==2.7.1
-httpx==0.27.0
+pydantic==2.10.3
+httpx==0.28.0
 
 # AI / ML (future)
 # langgraph
