@@ -1,0 +1,146 @@
+[
+  {
+    "id": 1,
+    "time": "09:00",
+    "type": "weather",
+    "location": "Kerala",
+    "severity": "medium",
+    "description": "Heavy rainfall begins across central Kerala. IMD issues orange alert.",
+    "affects": []
+  },
+  {
+    "id": 2,
+    "time": "09:30",
+    "type": "flood",
+    "location": "Pathanamthitta",
+    "severity": "medium",
+    "description": "Pampa river level rises 2.4m above danger mark. Downstream villages on alert.",
+    "affects": [9]
+  },
+  {
+    "id": 3,
+    "time": "10:00",
+    "type": "road_blocked",
+    "location": "Alappuzha",
+    "severity": "high",
+    "description": "NH-66 near Alappuzha submerged. Road access to coastal areas cut off.",
+    "affects": [4]
+  },
+  {
+    "id": 4,
+    "time": "10:15",
+    "type": "hospital_sos",
+    "location": "Alappuzha",
+    "severity": "high",
+    "description": "Alappuzha Medical Center requests immediate evacuation support. Generator fuel critical.",
+    "affects": [3]
+  },
+  {
+    "id": 5,
+    "time": "10:30",
+    "type": "flood",
+    "location": "Idukki",
+    "severity": "high",
+    "description": "Idukki reservoir reaches 99.2% capacity. Controlled release initiated.",
+    "affects": [10]
+  },
+  {
+    "id": 6,
+    "time": "10:45",
+    "type": "rescue",
+    "location": "Kottayam",
+    "severity": "medium",
+    "description": "NDRF rescue boat deployed from Kottayam base. 3 teams mobilised.",
+    "affects": [3]
+  },
+  {
+    "id": 7,
+    "time": "11:00",
+    "type": "shelter_capacity",
+    "location": "Alappuzha",
+    "severity": "medium",
+    "description": "Alappuzha Relief Shelter reaches 80% capacity. Overflow protocol activated.",
+    "affects": [4]
+  },
+  {
+    "id": 8,
+    "time": "11:15",
+    "type": "weather",
+    "location": "Thrissur",
+    "severity": "high",
+    "description": "Red alert issued for Thrissur and Palakkad districts. Rainfall exceeds 20cm/hr.",
+    "affects": [6]
+  },
+  {
+    "id": 9,
+    "time": "11:30",
+    "type": "road_blocked",
+    "location": "Kottayam",
+    "severity": "high",
+    "description": "Kottayam–Ernakulam highway blocked by landslide debris. Supply routes disrupted.",
+    "affects": [3, 7]
+  },
+  {
+    "id": 10,
+    "time": "11:45",
+    "type": "hospital_sos",
+    "location": "Kottayam",
+    "severity": "critical",
+    "description": "Kottayam District Hospital ICU flooding. Immediate patient transfer required.",
+    "affects": [3]
+  },
+  {
+    "id": 11,
+    "time": "12:00",
+    "type": "resource_deploy",
+    "location": "Ernakulam",
+    "severity": "low",
+    "description": "Ernakulam Resource Center dispatches 12 relief kits and 2 water tankers.",
+    "affects": [7]
+  },
+  {
+    "id": 12,
+    "time": "12:30",
+    "type": "shelter_capacity",
+    "location": "Thrissur",
+    "severity": "high",
+    "description": "Thrissur Shelter Hub at 95% capacity. Requesting additional tents and supplies.",
+    "affects": [6]
+  },
+  {
+    "id": 13,
+    "time": "13:00",
+    "type": "flood",
+    "location": "Pathanamthitta",
+    "severity": "critical",
+    "description": "Flash flood warning: Pathanamthitta district. 3 villages submerged. Mass evacuation ordered.",
+    "affects": [9]
+  },
+  {
+    "id": 14,
+    "time": "13:30",
+    "type": "rescue",
+    "location": "Alappuzha",
+    "severity": "medium",
+    "description": "Coast Guard helicopter deployed for aerial rescue over flooded coastal belt.",
+    "affects": [4]
+  },
+  {
+    "id": 15,
+    "time": "14:00",
+    "type": "resource_deploy",
+    "location": "Palakkad",
+    "severity": "medium",
+    "description": "Palakkad Supply Depot activates emergency protocol. Army convoy en route.",
+    "affects": [8]
+  },
+  {
+    "id": 16,
+    "time": "14:30",
+    "type": "weather",
+    "location": "Kerala",
+    "severity": "critical",
+    "description": "IMD upgrades to Red Alert statewide. Rainfall forecast 35cm in next 6 hours.",
+    "affects": []
+  }
+]

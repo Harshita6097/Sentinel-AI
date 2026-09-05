@@ -1,12 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useSim } from '../context/SimulationContext'
 
 export default function Header() {
-  const [time, setTime] = useState(new Date())
-
-  useEffect(() => {
-    const t = setInterval(() => setTime(new Date()), 1000)
-    return () => clearInterval(t)
-  }, [])
+  const { connected, sim } = useSim()
 
   return (
     <header style={s.header}>
@@ -19,11 +14,11 @@ export default function Header() {
       </div>
       <div style={s.right}>
         <div style={s.pill}>
-          <span style={s.dot} />
-          Backend Connecting…
+          <span style={{ ...s.dot, background: connected ? '#22c55e' : '#f59e0b' }} />
+          {connected ? 'Backend Connected' : 'Connecting…'}
         </div>
         <div style={s.clock}>
-          SIM {time.toUTCString().slice(17, 25)} UTC
+          SIM {sim.time} · Kerala Flood Scenario
         </div>
       </div>
     </header>
@@ -47,9 +42,6 @@ const s = {
     borderRadius: 9999, padding: '0.25rem 0.75rem',
     color: '#9ca3af', fontSize: '0.75rem',
   },
-  dot: {
-    width: 7, height: 7, borderRadius: '50%',
-    background: '#f59e0b', display: 'inline-block',
-  },
+  dot: { width: 7, height: 7, borderRadius: '50%', display: 'inline-block' },
   clock: { color: '#4b5563', fontSize: '0.75rem', fontFamily: 'monospace' },
 }

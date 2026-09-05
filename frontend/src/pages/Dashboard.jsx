@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
+import { SimulationProvider } from '../context/SimulationContext'
 import Header from '../components/Header'
 import Sidebar from '../components/Sidebar'
 import MapView from '../components/MapView'
 import { api } from '../services/api'
 
-export default function Dashboard() {
+function DashboardInner() {
   const [locations, setLocations] = useState([])
   const [error, setError] = useState(null)
 
@@ -27,6 +28,14 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function Dashboard() {
+  return (
+    <SimulationProvider>
+      <DashboardInner />
+    </SimulationProvider>
   )
 }
 
