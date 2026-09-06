@@ -1,10 +1,9 @@
-"""
-Incident Store — in-memory database for structured incidents.
+"""Incident Store — dual-layer storage: in-memory (fast) + ChromaDB (persistent).
 
-Architecture is designed for future persistence swap:
-  - Replace _store with a SQLAlchemy session for PostgreSQL
-  - Replace _store with a ChromaDB collection for vector search
-  - The public interface (save, get, list, update_status) stays identical.
+In-memory list provides O(1) access for the API and agent pipeline.
+ChromaDB provides persistence across restarts and semantic search.
+
+The public interface is unchanged.
 """
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
@@ -16,7 +15,7 @@ StatusType = Literal["Open", "Acknowledged", "Resolved"]
 @dataclass
 class Incident:
     id: str
-    time: str                       # "HH:MM" display time
+    time: str
     timestamp: datetime
     raw_text: str
     normalized_text: str
@@ -32,9 +31,9 @@ class Incident:
     duplicate: bool
     duplicate_similarity: float
     matched_incident_id: str | None
-    confidence: dict                 # {extraction, severity, duplicate, overall}
+    confidence: dict
     status: StatusType = "Open"
-    source: str = "manual"          # manual | mock | api
+    source: str = "manual"
 
     def to_dict(self) -> dict:
         d = asdict(self)
@@ -42,7 +41,6 @@ class Incident:
         return d
 
 
-# ── In-memory store ───────────────────────────────────────────────────────────
 _store: list[Incident] = []
 _counter = 0
 
@@ -54,13 +52,17 @@ def _next_id() -> str:
 
 
 def save(incident: Incident) -> Incident:
-    """Persist a new incident. Returns the saved incident."""
-    _store.insert(0, incident)   # newest first
+    """Persist a new incident to memory and ChromaDB."""
+    _store.insert(0, incident)
+    try:
+        from services.chroma_store import chroma_store
+        chroma_store.upsert(incident)
+    except Exception:
+        pass
     return incident
 
 
 def get(incident_id: str) -> Incident | None:
-    """Retrieve a single incident by ID."""
     return next((i for i in _store if i.id == incident_id), None)
 
 
@@ -69,14 +71,6 @@ def list_all(
     status: str | None = None,
     limit: int = 100,
 ) -> list[Incident]:
-    """
-    Return incidents filtered by optional severity and status.
-
-    Args:
-        severity: Filter by severity label (Critical/High/Medium/Low).
-        status:   Filter by status (Open/Acknowledged/Resolved).
-        limit:    Maximum number of results.
-    """
     results = _store
     if severity:
         results = [i for i in results if i.severity_label == severity]
@@ -85,39 +79,52 @@ def list_all(
     return results[:limit]
 
 
+def semantic_search(query: str, n: int = 5) -> list[dict]:
+    """Search incidents by semantic similarity. Returns metadata dicts."""
+    try:
+        from services.chroma_store import chroma_store
+        return chroma_store.semantic_search(query, n=n)
+    except Exception:
+        return []
+
+
 def update_status(incident_id: str, status: StatusType) -> Incident | None:
-    """Update the status of an existing incident."""
     inc = get(incident_id)
     if inc:
         inc.status = status
+        try:
+            from services.chroma_store import chroma_store
+            chroma_store.upsert(inc)
+        except Exception:
+            pass
     return inc
 
 
 def all_as_dicts() -> list[dict]:
-    """Return all incidents as plain dicts (for duplicate detection)."""
     return [
         {
-            "id": i.id,
-            "location": i.location,
-            "incident_type": i.incident_type,
-            "facility": i.facility,
-            "timestamp": i.timestamp,
+            "id":              i.id,
+            "location":        i.location,
+            "incident_type":   i.incident_type,
+            "facility":        i.facility,
+            "timestamp":       i.timestamp,
+            "raw_text":        i.raw_text,
+            "normalized_text": i.normalized_text,
         }
         for i in _store
     ]
 
 
 def make_id() -> str:
-    """Generate the next sequential incident ID."""
     return _next_id()
 
 
 def clear() -> None:
-    """Clear all incidents and reset counter (used for testing / reset).
-
-    WARNING: Only call this when the store is truly empty or being fully replaced.
-    Calling clear() while incidents still exist elsewhere will cause ID collisions.
-    """
     global _store, _counter
     _store = []
     _counter = 0
+    try:
+        from services.chroma_store import chroma_store
+        chroma_store.clear()
+    except Exception:
+        pass
