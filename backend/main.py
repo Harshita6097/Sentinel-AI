@@ -7,6 +7,7 @@ from api.vision import router as vision_router
 from api.emergency import router as emergency_router
 from api.logistics import router as logistics_router
 from api.commander import router as commander_router
+from api.dashboard import router as dashboard_router
 from simulation import scheduler
 
 
@@ -33,6 +34,7 @@ app.include_router(vision_router)
 app.include_router(emergency_router)
 app.include_router(logistics_router)
 app.include_router(commander_router)
+app.include_router(dashboard_router)
 
 
 @app.get("/health")
