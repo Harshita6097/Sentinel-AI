@@ -4,6 +4,8 @@ python-dotenv==1.0.1
 pydantic==2.10.3
 httpx==0.28.0
 python-multipart==0.0.20
+langgraph==0.2.55
+langchain-core==0.3.28
 
 # AI / ML (future — uncomment when weights are available in D:\GOALS\Models\)
 # transformers==4.44.0

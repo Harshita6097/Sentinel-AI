@@ -3,6 +3,7 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 from pydantic import BaseModel
 from agents.vision_agent import vision_agent
 from services.model_loader import models_status
+from services.vision_cop_bridge import cache_vision_result
 
 router = APIRouter(prefix="/api/vision", tags=["vision"])
 
@@ -62,6 +63,9 @@ async def analyze_image(file: UploadFile = File(...)):
         result = vision_agent.analyze(image_bytes, content_type)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
+
+    # Cache result so the LangGraph vision node can sync it into the COP
+    cache_vision_result(result)
 
     return VisionResponse(**result.to_dict())
 

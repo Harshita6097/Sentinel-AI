@@ -68,6 +68,13 @@ def reset() -> None:
         logistics_agent.reset()
     except Exception:
         pass
+    try:
+        from agents.commander_agent import commander_agent
+        from services.cop_manager import reset_cop
+        commander_agent.reset()
+        reset_cop()
+    except Exception:
+        pass
 
 
 def step() -> None:
