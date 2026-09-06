@@ -1,26 +1,27 @@
-"""
-Duplicate Detector — prevents repeated reports from creating multiple incidents.
+"""Duplicate Detector — prevents repeated reports from creating multiple incidents.
 
-Uses a lightweight similarity score based on:
-  - Location match (exact)
-  - Incident type match
-  - Facility overlap
-  - Time proximity (within a configurable window)
+Uses SentenceTransformer semantic similarity when available (USE_MOCK_MODELS=false),
+otherwise falls back to lightweight keyword-based scoring.
 
-Interface is ready for future replacement with vector similarity search (ChromaDB).
+Semantic similarity compares the normalised report text against stored incident
+texts using cosine similarity on sentence embeddings.
 """
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-DUPLICATE_WINDOW_MINUTES = 30   # reports within this window are candidates
-DUPLICATE_THRESHOLD = 0.75      # similarity >= this → duplicate
+logger = logging.getLogger(__name__)
+
+DUPLICATE_WINDOW_MINUTES = 30
+DUPLICATE_THRESHOLD = 0.75
+SEMANTIC_THRESHOLD = 0.82   # cosine similarity threshold for semantic match
 
 
 @dataclass
 class DuplicateResult:
     duplicate: bool
     similarity: float           # 0.0 – 1.0
-    matched_id: str | None      # ID of the existing incident if duplicate
+    matched_id: str | None
 
 
 def check(
@@ -29,9 +30,9 @@ def check(
     facility: str | None,
     timestamp: datetime,
     existing_incidents: list[dict],
+    raw_text: str = "",
 ) -> DuplicateResult:
-    """
-    Check whether a new report duplicates an existing incident.
+    """Check whether a new report duplicates an existing incident.
 
     Args:
         location:           Extracted location string (may be None).
@@ -39,20 +40,97 @@ def check(
         facility:           Extracted facility name (may be None).
         timestamp:          Datetime of the new report.
         existing_incidents: List of stored incident dicts from incident_store.
+        raw_text:           Original report text for semantic comparison.
 
     Returns:
         DuplicateResult with similarity score and matched ID if duplicate.
     """
+    if not existing_incidents:
+        return DuplicateResult(duplicate=False, similarity=0.0, matched_id=None)
+
+    # Try semantic similarity first
+    if raw_text:
+        result = _semantic_check(raw_text, timestamp, existing_incidents)
+        if result is not None:
+            return result
+
+    # Fallback: keyword-based scoring
+    return _keyword_check(location, incident_type, facility, timestamp, existing_incidents)
+
+
+def _semantic_check(
+    raw_text: str,
+    timestamp: datetime,
+    existing_incidents: list[dict],
+) -> DuplicateResult | None:
+    """Use SentenceTransformer cosine similarity. Returns None if model unavailable."""
+    try:
+        from services.model_loader import load_sentence_transformer
+        model = load_sentence_transformer()
+        if model is None:
+            return None
+
+        import numpy as np
+
+        window = timedelta(minutes=DUPLICATE_WINDOW_MINUTES)
+        candidates = [
+            inc for inc in existing_incidents
+            if inc.get("timestamp") and
+            abs((timestamp - inc["timestamp"]).total_seconds()) <= window.total_seconds()
+        ]
+        if not candidates:
+            return None
+
+        texts = [inc.get("raw_text", inc.get("normalized_text", "")) for inc in candidates]
+        texts = [t for t in texts if t]
+        if not texts:
+            return None
+
+        all_texts = [raw_text] + texts
+        embeddings = model.encode(all_texts, convert_to_numpy=True, show_progress_bar=False)
+
+        query_emb = embeddings[0]
+        candidate_embs = embeddings[1:]
+
+        # Cosine similarity
+        norms = np.linalg.norm(candidate_embs, axis=1, keepdims=True)
+        norms = np.where(norms == 0, 1e-9, norms)
+        normed = candidate_embs / norms
+        query_norm = query_emb / (np.linalg.norm(query_emb) + 1e-9)
+        similarities = normed @ query_norm
+
+        best_idx = int(np.argmax(similarities))
+        best_score = float(similarities[best_idx])
+
+        is_dup = best_score >= SEMANTIC_THRESHOLD
+        matched_id = candidates[best_idx]["id"] if is_dup else None
+
+        return DuplicateResult(
+            duplicate=is_dup,
+            similarity=round(best_score, 3),
+            matched_id=matched_id,
+        )
+    except Exception as exc:
+        logger.debug("Semantic duplicate check failed (%s) — using keyword fallback", exc)
+        return None
+
+
+def _keyword_check(
+    location: str | None,
+    incident_type: str,
+    facility: str | None,
+    timestamp: datetime,
+    existing_incidents: list[dict],
+) -> DuplicateResult:
+    """Weighted keyword similarity fallback."""
     best_score = 0.0
     best_id: str | None = None
     window = timedelta(minutes=DUPLICATE_WINDOW_MINUTES)
 
     for inc in existing_incidents:
-        # Only compare against open incidents within the time window
         inc_time = inc.get("timestamp")
         if inc_time and abs((timestamp - inc_time).total_seconds()) > window.total_seconds():
             continue
-
         score = _similarity(location, incident_type, facility, inc)
         if score > best_score:
             best_score = score
@@ -72,32 +150,16 @@ def _similarity(
     facility: str | None,
     existing: dict,
 ) -> float:
-    """
-    Compute a weighted similarity score between a new report and an existing incident.
-
-    Weights:
-      - Location match:      0.40
-      - Incident type match: 0.35
-      - Facility match:      0.25
-    """
     score = 0.0
-
-    # Location (40%)
     if location and existing.get("location"):
         if location.lower() == existing["location"].lower():
             score += 0.40
-
-    # Incident type (35%)
     if incident_type == existing.get("incident_type", ""):
         score += 0.35
-
-    # Facility (25%) — partial match allowed
     if facility and existing.get("facility"):
-        f1 = facility.lower()
-        f2 = existing["facility"].lower()
+        f1, f2 = facility.lower(), existing["facility"].lower()
         if f1 == f2:
             score += 0.25
         elif f1 in f2 or f2 in f1:
             score += 0.12
-
     return score

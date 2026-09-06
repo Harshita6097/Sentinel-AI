@@ -114,6 +114,8 @@ def assign_resource(req: AssignRequest):
     )
     if result is None:
         raise HTTPException(status_code=404, detail="No available resource found")
+    if not result.reachable:
+        raise HTTPException(status_code=404, detail=f"No passable route to '{req.destination}'")
     return AssignmentOut(**result.__dict__)
 
 

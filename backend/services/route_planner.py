@@ -1,13 +1,18 @@
-"""Shortest-path routing over RoadGraph.
+"""Shortest-path routing over Kerala road network.
 
-Uses Dijkstra's algorithm directly on the graph abstraction.
-To switch to NetworkX: replace _dijkstra() with nx.shortest_path()
-and nx.shortest_path_length() — the public interface stays identical.
+Primary path: OSMnx + NetworkX real road graph (when osmnx is installed).
+Fallback path: Custom Dijkstra over the static RoadGraph from roads.json.
+
+The public interface (find_route) is identical in both cases so no other
+module needs to change.
 """
 import heapq
+import logging
 from dataclasses import dataclass
 
 from services.graph_builder import RoadGraph
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -15,30 +20,67 @@ class RouteResult:
     origin: str
     destination: str
     route: list[str]            # ordered node sequence
-    edge_ids: list[str]         # edges traversed
+    edge_ids: list[str]         # edges traversed (empty for OSM routes)
     total_time: float           # minutes
     reachable: bool
+    source: str = "static"      # "osm" | "static"
 
 
 def find_route(graph: RoadGraph, origin: str, destination: str) -> RouteResult:
-    """Return the shortest (lowest travel-time) route avoiding blocked edges."""
-    if origin not in graph.nodes:
-        return _unreachable(origin, destination, f"Origin '{origin}' not in graph")
-    if destination not in graph.nodes:
-        return _unreachable(origin, destination, f"Destination '{destination}' not in graph")
+    """Return the shortest (lowest travel-time) route avoiding blocked edges.
+
+    Tries OSMnx first; falls back to Dijkstra on the static RoadGraph.
+    """
     if origin == destination:
-        return RouteResult(origin, destination, [origin], [], 0.0, True)
+        return RouteResult(origin, destination, [origin], [], 0.0, True, "static")
+
+    # Try real OSM routing
+    osm_result = _try_osm_route(origin, destination)
+    if osm_result is not None:
+        return osm_result
+
+    # Fallback: static Dijkstra
+    return _static_route(graph, origin, destination)
+
+
+# ── OSMnx path ────────────────────────────────────────────────────────────────
+
+def _try_osm_route(origin: str, destination: str) -> RouteResult | None:
+    """Attempt OSMnx routing. Returns None if unavailable."""
+    try:
+        from services.osm_service import osm_shortest_path
+        result = osm_shortest_path(origin, destination)
+        if result is None:
+            return None
+        return RouteResult(
+            origin=origin,
+            destination=destination,
+            route=result["route"],
+            edge_ids=[],
+            total_time=result["total_time_minutes"],
+            reachable=result["reachable"],
+            source="osm",
+        )
+    except Exception as exc:
+        logger.debug("OSM route attempt failed: %s", exc)
+        return None
+
+
+# ── Static Dijkstra fallback ──────────────────────────────────────────────────
+
+def _static_route(graph: RoadGraph, origin: str, destination: str) -> RouteResult:
+    if origin not in graph.nodes:
+        return _unreachable(origin, destination)
+    if destination not in graph.nodes:
+        return _unreachable(origin, destination)
 
     dist, prev_node, prev_edge = _dijkstra(graph, origin)
-
     if dist[destination] == float("inf"):
-        return _unreachable(origin, destination, "No passable path")
+        return _unreachable(origin, destination)
 
     route, edge_ids = _reconstruct(prev_node, prev_edge, origin, destination)
-    return RouteResult(origin, destination, route, edge_ids, dist[destination], True)
+    return RouteResult(origin, destination, route, edge_ids, dist[destination], True, "static")
 
-
-# ── internals ────────────────────────────────────────────────────────────────
 
 def _dijkstra(graph: RoadGraph, source: str):
     dist      = {n: float("inf") for n in graph.nodes}
@@ -77,5 +119,5 @@ def _reconstruct(prev_node, prev_edge, origin, destination):
     return route, edge_ids
 
 
-def _unreachable(origin, destination, reason=""):
-    return RouteResult(origin, destination, [], [], float("inf"), False)
+def _unreachable(origin, destination):
+    return RouteResult(origin, destination, [], [], float("inf"), False, "static")

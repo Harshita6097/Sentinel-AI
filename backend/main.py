@@ -1,6 +1,12 @@
+import logging
+import os
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+from utils.logging_config import configure_logging
+from utils.startup_checks import run_startup_checks
 from api.map import router as map_router
 from api.simulation import router as sim_router
 from api.vision import router as vision_router
@@ -10,19 +16,42 @@ from api.commander import router as commander_router
 from api.dashboard import router as dashboard_router
 from simulation import scheduler
 
+configure_logging()
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    logger.info("Sentinel AI starting up…")
+    startup_report = run_startup_checks()
+    app.state.startup_report = startup_report
     scheduler.start()
+    logger.info("Sentinel AI ready")
     yield
     scheduler.stop()
+    logger.info("Sentinel AI shut down")
 
 
-app = FastAPI(title="Sentinel-AI API", version="0.1.0", lifespan=lifespan)
+app = FastAPI(
+    title="Sentinel AI API",
+    version="1.0.0",
+    description="Multi-Agent Disaster Response System — Kerala Flood Response",
+    lifespan=lifespan,
+)
+
+# CORS — allow configured origins + localhost dev
+_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:4173",
+]
+_FRONTEND_URL = os.getenv("FRONTEND_URL", "")
+if _FRONTEND_URL:
+    _ALLOWED_ORIGINS.append(_FRONTEND_URL)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "https://*.vercel.app"],
+    allow_origins=_ALLOWED_ORIGINS,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -39,4 +68,16 @@ app.include_router(dashboard_router)
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "sentinel-ai-backend"}
+    return {"status": "ok", "service": "sentinel-ai-backend", "version": "1.0.0"}
+
+
+@app.get("/health/detailed")
+def health_detailed():
+    """Detailed health check including service availability status."""
+    report = getattr(app.state, "startup_report", {})
+    return {
+        "status": "ok",
+        "service": "sentinel-ai-backend",
+        "version": "1.0.0",
+        "services": report,
+    }
