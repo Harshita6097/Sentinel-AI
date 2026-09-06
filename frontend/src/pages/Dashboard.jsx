@@ -7,12 +7,23 @@ import { api } from '../services/api'
 
 function DashboardInner() {
   const [locations, setLocations] = useState([])
-  const [error, setError] = useState(null)
+  const [network, setNetwork]     = useState(null)
+  const [routes, setRoutes]       = useState([])
+  const [error, setError]         = useState(null)
 
   useEffect(() => {
     api.getLocations()
       .then(setLocations)
       .catch(() => setError('Backend offline — map data unavailable'))
+    api.getNetwork().then(setNetwork).catch(() => {})
+  }, [])
+
+  // Poll routes every 3s so map updates when assignments change
+  useEffect(() => {
+    const fetch = () => api.getRoutes().then(setRoutes).catch(() => {})
+    fetch()
+    const t = setInterval(fetch, 3000)
+    return () => clearInterval(t)
   }, [])
 
   return (
@@ -23,7 +34,7 @@ function DashboardInner() {
         <div style={s.mapWrap}>
           {error
             ? <div style={s.error}>{error}</div>
-            : <MapView locations={locations} />
+            : <MapView locations={locations} network={network} routes={routes} />
           }
         </div>
       </div>

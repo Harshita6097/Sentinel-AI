@@ -67,4 +67,12 @@ export const api = {
   getIncident:            (id) => get(`/api/emergency/incidents/${id}`),
   updateIncidentStatus:   (id, status) => patch(`/api/emergency/incidents/${id}/status`, { status }),
   loadMockReports:        () => post('/api/emergency/mock'),
+  // Logistics
+  getResources:            () => get('/api/logistics/resources'),
+  getRoutes:               () => get('/api/logistics/routes'),
+  getNetwork:              () => get('/api/logistics/network'),
+  assignResource:          (body) => post('/api/logistics/assign', body),
+  recalculateRoutes:       () => post('/api/logistics/recalculate'),
+  injectLogisticsEvent:    (body) => post('/api/logistics/event', body),
+  resetLogistics:          () => post('/api/logistics/reset'),
 }

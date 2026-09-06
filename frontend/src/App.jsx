@@ -2,17 +2,20 @@ import { useState } from 'react'
 import Dashboard from './pages/Dashboard'
 import VisionDashboard from './pages/VisionDashboard'
 import EmergencyDashboard from './pages/EmergencyDashboard'
+import LogisticsDashboard from './pages/LogisticsDashboard'
 
 const PAGES = {
   dashboard: Dashboard,
   vision:    VisionDashboard,
   emergency: EmergencyDashboard,
+  logistics: LogisticsDashboard,
 }
 
 const NAV = [
   { id: 'dashboard', label: '🗺️ Command Center' },
   { id: 'vision',    label: '🛰️ Vision Agent' },
   { id: 'emergency', label: '🚨 Emergency Intel' },
+  { id: 'logistics', label: '🚚 Logistics Agent' },
 ]
 
 export default function App() {
