@@ -12,7 +12,23 @@ async function post(path, body) {
     headers: { 'Content-Type': 'application/json' },
     body: body ? JSON.stringify(body) : undefined,
   })
-  if (!res.ok) throw new Error(`API error ${res.status}: ${path}`)
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }))
+    throw new Error(err.detail ?? `API error ${res.status}`)
+  }
+  return res.json()
+}
+
+async function patch(path, body) {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }))
+    throw new Error(err.detail ?? `API error ${res.status}`)
+  }
   return res.json()
 }
 
@@ -27,16 +43,28 @@ async function postForm(path, formData) {
 
 export const api = {
   // Map
-  getLocations:    () => get('/api/map/locations'),
+  getLocations:           () => get('/api/map/locations'),
   // Simulation
-  getSimState:     () => get('/api/simulation/state'),
-  getTimeline:     () => get('/api/simulation/timeline'),
-  simPlay:         () => post('/api/simulation/play'),
-  simPause:        () => post('/api/simulation/pause'),
-  simReset:        () => post('/api/simulation/reset'),
-  simStep:         () => post('/api/simulation/step'),
-  simSetSpeed:     (speed) => post('/api/simulation/speed', { speed }),
+  getSimState:            () => get('/api/simulation/state'),
+  getTimeline:            () => get('/api/simulation/timeline'),
+  simPlay:                () => post('/api/simulation/play'),
+  simPause:               () => post('/api/simulation/pause'),
+  simReset:               () => post('/api/simulation/reset'),
+  simStep:                () => post('/api/simulation/step'),
+  simSetSpeed:            (speed) => post('/api/simulation/speed', { speed }),
   // Vision
-  analyzeImage:    (file) => { const fd = new FormData(); fd.append('file', file); return postForm('/api/vision/analyze', fd) },
-  visionHealth:    () => get('/api/vision/health'),
+  analyzeImage:           (file) => { const fd = new FormData(); fd.append('file', file); return postForm('/api/vision/analyze', fd) },
+  visionHealth:           () => get('/api/vision/health'),
+  // Emergency
+  submitReport:           (text) => post('/api/emergency/report', { text }),
+  getIncidents:           (severity, status) => {
+    const params = new URLSearchParams()
+    if (severity && severity !== 'All') params.set('severity', severity)
+    if (status) params.set('status', status)
+    const qs = params.toString()
+    return get(`/api/emergency/incidents${qs ? '?' + qs : ''}`)
+  },
+  getIncident:            (id) => get(`/api/emergency/incidents/${id}`),
+  updateIncidentStatus:   (id, status) => patch(`/api/emergency/incidents/${id}/status`, { status }),
+  loadMockReports:        () => post('/api/emergency/mock'),
 }
