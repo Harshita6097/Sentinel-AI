@@ -1,0 +1,34 @@
+{
+  "nodes": [
+    {"id": "Kochi",            "lat": 9.9312,  "lng": 76.2673},
+    {"id": "Alappuzha",        "lat": 9.4981,  "lng": 76.3388},
+    {"id": "Kottayam",         "lat": 9.5916,  "lng": 76.5222},
+    {"id": "Thiruvananthapuram","lat": 8.5241,  "lng": 76.9366},
+    {"id": "Thrissur",         "lat": 10.5276, "lng": 76.2144},
+    {"id": "Palakkad",         "lat": 10.7867, "lng": 76.6548},
+    {"id": "Pathanamthitta",   "lat": 9.2648,  "lng": 76.7870},
+    {"id": "Idukki",           "lat": 9.9189,  "lng": 77.1025},
+    {"id": "Ernakulam",        "lat": 9.9816,  "lng": 76.2999},
+    {"id": "Cherthala",        "lat": 9.6860,  "lng": 76.3390},
+    {"id": "Changanacherry",   "lat": 9.4480,  "lng": 76.5360},
+    {"id": "Muvattupuzha",     "lat": 9.9850,  "lng": 76.5790}
+  ],
+  "edges": [
+    {"id": "R1",  "from": "Kochi",       "to": "Ernakulam",       "travel_time": 12, "road_name": "NH-66 Kochi–Ernakulam"},
+    {"id": "R2",  "from": "Ernakulam",   "to": "Cherthala",       "travel_time": 28, "road_name": "NH-66 Ernakulam–Cherthala"},
+    {"id": "R3",  "from": "Cherthala",   "to": "Alappuzha",       "travel_time": 18, "road_name": "NH-66 Cherthala–Alappuzha"},
+    {"id": "R4",  "from": "Alappuzha",   "to": "Changanacherry",  "travel_time": 35, "road_name": "MC Road Alappuzha–Changanacherry"},
+    {"id": "R5",  "from": "Changanacherry","to": "Kottayam",      "travel_time": 15, "road_name": "MC Road Changanacherry–Kottayam"},
+    {"id": "R6",  "from": "Kottayam",    "to": "Ernakulam",       "travel_time": 55, "road_name": "NH-183 Kottayam–Ernakulam"},
+    {"id": "R7",  "from": "Kottayam",    "to": "Pathanamthitta",  "travel_time": 40, "road_name": "MC Road Kottayam–Pathanamthitta"},
+    {"id": "R8",  "from": "Pathanamthitta","to": "Thiruvananthapuram","travel_time": 90, "road_name": "NH-183 Pathanamthitta–TVM"},
+    {"id": "R9",  "from": "Kottayam",    "to": "Idukki",          "travel_time": 65, "road_name": "SH-1 Kottayam–Idukki"},
+    {"id": "R10", "from": "Ernakulam",   "to": "Thrissur",        "travel_time": 50, "road_name": "NH-544 Ernakulam–Thrissur"},
+    {"id": "R11", "from": "Thrissur",    "to": "Palakkad",        "travel_time": 45, "road_name": "NH-544 Thrissur–Palakkad"},
+    {"id": "R12", "from": "Kochi",       "to": "Thrissur",        "travel_time": 58, "road_name": "NH-544 Kochi–Thrissur"},
+    {"id": "R13", "from": "Ernakulam",   "to": "Muvattupuzha",    "travel_time": 35, "road_name": "NH-85 Ernakulam–Muvattupuzha"},
+    {"id": "R14", "from": "Muvattupuzha","to": "Kottayam",        "travel_time": 30, "road_name": "NH-85 Muvattupuzha–Kottayam"},
+    {"id": "R15", "from": "Muvattupuzha","to": "Idukki",          "travel_time": 45, "road_name": "NH-85 Muvattupuzha–Idukki"},
+    {"id": "R16", "from": "Alappuzha",   "to": "Pathanamthitta",  "travel_time": 60, "road_name": "SH-8 Alappuzha–Pathanamthitta"}
+  ]
+}

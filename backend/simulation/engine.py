@@ -45,6 +45,7 @@ def _fire_due_events(state) -> None:
             state.triggered_ids.add(event.id)
             state.active_events.insert(0, event)   # newest first
             _apply_location_override(state, event)
+            _notify_logistics(event, state.current_minutes)
 
 
 def play() -> None:
@@ -62,6 +63,11 @@ def pause() -> None:
 def reset() -> None:
     """Reset simulation to t=09:00."""
     reset_state()
+    try:
+        from agents.logistics_agent import logistics_agent
+        logistics_agent.reset()
+    except Exception:
+        pass
 
 
 def step() -> None:
@@ -78,3 +84,14 @@ def set_speed(speed: int) -> None:
     if speed not in (1, 2, 5):
         raise ValueError("Speed must be 1, 2, or 5")
     get_state().speed = speed
+
+
+def _notify_logistics(event, current_minutes: int) -> None:
+    """Forward simulation events to the logistics agent (import deferred to avoid circular)."""
+    try:
+        from agents.logistics_agent import logistics_agent
+        logistics_agent.handle_simulation_event(
+            event.type, event.location, event.id, current_minutes
+        )
+    except Exception:
+        pass  # logistics errors must never crash the simulation loop

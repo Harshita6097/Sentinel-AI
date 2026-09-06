@@ -1,0 +1,12 @@
+[
+  {"id": "Boat-01",       "type": "Boat",       "status": "Available", "location": "Alappuzha",  "capacity": 12, "speed_kmh": 25},
+  {"id": "Boat-02",       "type": "Boat",       "status": "Available", "location": "Kochi",      "capacity": 10, "speed_kmh": 25},
+  {"id": "Boat-03",       "type": "Boat",       "status": "Available", "location": "Kottayam",   "capacity": 8,  "speed_kmh": 20},
+  {"id": "Ambulance-01",  "type": "Ambulance",  "status": "Available", "location": "Kottayam",   "capacity": 4,  "speed_kmh": 60},
+  {"id": "Ambulance-02",  "type": "Ambulance",  "status": "Available", "location": "Kochi",      "capacity": 4,  "speed_kmh": 60},
+  {"id": "Ambulance-03",  "type": "Ambulance",  "status": "Available", "location": "Thrissur",   "capacity": 4,  "speed_kmh": 60},
+  {"id": "Helicopter-01", "type": "Helicopter", "status": "Available", "location": "Kochi",      "capacity": 6,  "speed_kmh": 180},
+  {"id": "Helicopter-02", "type": "Helicopter", "status": "Available", "location": "Palakkad",   "capacity": 6,  "speed_kmh": 180},
+  {"id": "Truck-01",      "type": "Truck",      "status": "Available", "location": "Ernakulam",  "capacity": 20, "speed_kmh": 50},
+  {"id": "Truck-02",      "type": "Truck",      "status": "Available", "location": "Palakkad",   "capacity": 20, "speed_kmh": 50}
+]
