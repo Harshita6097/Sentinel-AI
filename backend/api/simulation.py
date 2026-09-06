@@ -45,7 +45,18 @@ def _state_response() -> SimStateOut:
         finished=s.finished,
         speed=s.speed,
         progress=round(s.progress, 4),
-        active_events=[EventOut(**e.__dict__) for e in s.active_events],
+        active_events=[
+            EventOut(
+                id=e.id,
+                time=e.time,
+                type=e.type,
+                location=e.location,
+                severity=e.severity,
+                description=e.description,
+                affects=list(e.affects),   # copy — don't share mutable list
+            )
+            for e in s.active_events
+        ],
         location_overrides={str(k): v for k, v in s.location_overrides.items()},
     )
 
@@ -99,4 +110,10 @@ def set_speed(body: SpeedIn):
 @router.get("/timeline", response_model=list[EventOut])
 def get_full_timeline():
     """Return the complete event timeline (all 16 events)."""
-    return [EventOut(**e.__dict__) for e in get_timeline()]
+    return [
+        EventOut(
+            id=e.id, time=e.time, type=e.type, location=e.location,
+            severity=e.severity, description=e.description, affects=list(e.affects),
+        )
+        for e in get_timeline()
+    ]

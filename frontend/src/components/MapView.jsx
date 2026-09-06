@@ -44,7 +44,7 @@ export default function MapView({ locations }) {
         const { color, radius, fillOpacity, status } = resolveMarker(loc, overrides)
         return (
           <CircleMarker
-            key={`${loc.id}-${status}`}
+            key={loc.id}
             center={[loc.lat, loc.lng]}
             radius={radius}
             pathOptions={{ color, fillColor: color, fillOpacity, weight: 2 }}

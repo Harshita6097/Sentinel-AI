@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 
 const ACCEPT = 'image/jpeg,image/png,image/webp,image/tiff'
 
-export default function ImageUploader({ onFile }) {
+export default function ImagePreview({ onFile }) {
   const inputRef = useRef(null)
   const [dragging, setDragging] = useState(false)
 

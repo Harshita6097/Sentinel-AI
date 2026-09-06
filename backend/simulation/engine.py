@@ -27,7 +27,7 @@ def _apply_location_override(state, event) -> None:
 
 def tick() -> None:
     """Advance the simulation clock by one tick (called by scheduler every second)."""
-    state = get_state()
+    state = get_state()  # always fetch current singleton — safe after reset
     if state.paused or state.finished:
         return
 

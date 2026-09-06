@@ -6,11 +6,13 @@ export default function ImageUploader({ onAnalyze, loading }) {
   const [previewUrl, setPreviewUrl] = useState(null)
 
   const handleFile = (f) => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
     setFile(f)
     setPreviewUrl(URL.createObjectURL(f))
   }
 
   const handleClear = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
     setFile(null)
     setPreviewUrl(null)
   }

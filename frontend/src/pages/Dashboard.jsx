@@ -42,7 +42,7 @@ export default function Dashboard() {
 const s = {
   root: {
     display: 'flex', flexDirection: 'column',
-    height: '100vh', background: '#0a0f1e',
+    flex: 1, background: '#0a0f1e',
     fontFamily: 'system-ui, sans-serif', overflow: 'hidden',
   },
   body: { display: 'flex', flex: 1, overflow: 'hidden' },

@@ -25,7 +25,8 @@ class SimulationState:
     def progress(self) -> float:
         """0.0 – 1.0 progress through the timeline."""
         span = SIM_END - SIM_START
-        return min((self.current_minutes - SIM_START) / span, 1.0)
+        elapsed = max(self.current_minutes - SIM_START, 0)  # clamp to 0 if below start
+        return min(elapsed / span, 1.0)
 
     @property
     def finished(self) -> bool:

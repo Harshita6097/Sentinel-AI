@@ -83,7 +83,7 @@ export default function VisionDashboard() {
 }
 
 const s = {
-  root: { display: 'flex', flexDirection: 'column', height: '100vh', background: '#0a0f1e', fontFamily: 'system-ui, sans-serif', overflow: 'hidden' },
+  root: { display: 'flex', flexDirection: 'column', flex: 1, background: '#0a0f1e', fontFamily: 'system-ui, sans-serif', overflow: 'hidden' },
   body: { display: 'flex', flex: 1, overflow: 'hidden', gap: 0 },
   left: {
     width: 380, flexShrink: 0, background: '#0d1117', borderRight: '1px solid #1f2937',

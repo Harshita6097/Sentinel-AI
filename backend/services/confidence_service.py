@@ -40,7 +40,7 @@ def _grade(score: int) -> str:
 
 def calculate_confidence(
     seg: SegmentationResult,
-    scene: SceneDescription,
+    scene: SceneDescription,  # reserved for real model logits in future
 ) -> ConfidenceScore:
     """
     Derive confidence scores from segmentation and scene description results.
