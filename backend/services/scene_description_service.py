@@ -1,13 +1,17 @@
-"""
-Scene description service.
+"""Scene description service.
 
-Interface matches future Florence-2 integration.
-Mock descriptions are selected deterministically from a curated bank
-of realistic Kerala flood scene descriptions.
+Real inference path uses Florence-2 (microsoft/Florence-2-base) with the
+<DETAILED_CAPTION> task prompt. Falls back to deterministic mock when
+USE_MOCK_MODELS=true or when weights are unavailable.
 """
 import hashlib
+import io
+import logging
 from dataclasses import dataclass
+
 from services.model_loader import load_florence2, USE_MOCK
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -59,31 +63,82 @@ _DESCRIPTIONS = [
 
 
 def _mock_description(image_bytes: bytes) -> SceneDescription:
-    """
-    Return a deterministic mock scene description based on image hash.
-    TODO: Replace with real Florence-2 inference when weights are loaded.
-    """
     digest = int(hashlib.md5(image_bytes[:512]).hexdigest(), 16)
     return _DESCRIPTIONS[digest % len(_DESCRIPTIONS)]
 
 
-def run_scene_description(image_bytes: bytes) -> SceneDescription:
-    """
-    Generate a natural-language scene description from image bytes.
+def _parse_florence_output(caption: str) -> SceneDescription:
+    lower = caption.lower()
+    observations = []
+    if any(w in lower for w in ["vehicle", "car", "truck"]):
+        observations.append("Vehicles visible in scene")
+    if any(w in lower for w in ["water", "flood", "submerged"]):
+        observations.append("Floodwater present")
+    if any(w in lower for w in ["building", "house", "structure"]):
+        observations.append("Structures affected")
+    if any(w in lower for w in ["road", "street", "highway"]):
+        observations.append("Road infrastructure impacted")
+    if any(w in lower for w in ["person", "people", "civilian", "resident"]):
+        observations.append("Civilians visible")
+    if not observations:
+        observations = ["Scene captured by Florence-2"]
 
-    Args:
-        image_bytes: Raw bytes of the uploaded image.
+    if any(w in lower for w in ["blocked", "impassable", "flooded road"]):
+        infra = "Road access compromised"
+    elif any(w in lower for w in ["damaged", "collapsed", "destroyed"]):
+        infra = "Infrastructure damage detected"
+    else:
+        infra = "Infrastructure status unclear from image"
 
-    Returns:
-        SceneDescription with caption and structured observations.
-    """
-    model = load_florence2()
-    if USE_MOCK or model is None:
+    civilian = (
+        "Civilians detected in scene"
+        if any(w in lower for w in ["person", "people", "civilian", "resident", "crowd"])
+        else "No civilians clearly visible"
+    )
+
+    return SceneDescription(
+        caption=caption.strip(),
+        key_observations=observations,
+        infrastructure_status=infra,
+        civilian_presence=civilian,
+        model_used="florence-2-base",
+    )
+
+
+def _real_description(image_bytes: bytes, model, processor) -> SceneDescription:
+    try:
+        import torch
+        from PIL import Image
+
+        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        prompt = "<DETAILED_CAPTION>"
+        inputs = processor(text=prompt, images=image, return_tensors="pt")
+
+        with torch.no_grad():
+            generated_ids = model.generate(
+                input_ids=inputs["input_ids"],
+                pixel_values=inputs["pixel_values"],
+                max_new_tokens=256,
+                num_beams=3,
+                early_stopping=True,
+            )
+
+        raw = processor.batch_decode(generated_ids, skip_special_tokens=False)[0]
+        caption = processor.post_process_generation(
+            raw, task=prompt, image_size=(image.width, image.height)
+        )
+        if isinstance(caption, dict):
+            caption = caption.get(prompt, str(caption))
+
+        return _parse_florence_output(str(caption))
+    except Exception as exc:
+        logger.warning("Florence-2 inference failed (%s) — using mock", exc)
         return _mock_description(image_bytes)
 
-    # TODO: Real Florence-2 inference path
-    # processor = AutoProcessor.from_pretrained(..., trust_remote_code=True)
-    # inputs = processor(text="<DETAILED_CAPTION>", images=image, return_tensors="pt")
-    # generated_ids = model.generate(**inputs, max_new_tokens=256)
-    # caption = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
-    raise NotImplementedError("Real scene description not yet implemented.")
+
+def run_scene_description(image_bytes: bytes) -> SceneDescription:
+    """Generate a natural-language scene description from image bytes."""
+    model, processor = load_florence2()
+    if USE_MOCK or model is None:
+        return _mock_description(image_bytes)
+    return _real_description(image_bytes, model, processor)

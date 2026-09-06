@@ -99,7 +99,7 @@ class EmergencyAgent:
         # 3. Classify severity
         severity: SeverityResult = classify(normalized, entities)
 
-        # 4. Detect duplicates
+        # 4. Detect duplicates (semantic when model available, keyword fallback)
         existing = incident_store.all_as_dicts()
         dup_result = check_duplicate(
             location=entities.location,
@@ -107,6 +107,7 @@ class EmergencyAgent:
             facility=entities.facility,
             timestamp=timestamp,
             existing_incidents=existing,
+            raw_text=normalized,
         )
 
         # 5. Confidence
