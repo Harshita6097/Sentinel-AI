@@ -28,19 +28,15 @@ export function SimulationProvider({ children }) {
   }, [refresh])
 
   // Wrap every control: update state on success, ignore stale responses on error
-  const wrap = (apiFn) => () =>
-    apiFn().then(setSim).catch(() => {/* backend momentarily unavailable */})
-
-  const controls = {
-    play:     wrap(api.simPlay),
-    pause:    wrap(api.simPause),
-    reset:    wrap(api.simReset),
-    step:     wrap(api.simStep),
-    setSpeed: (s) => api.simSetSpeed(s).then(setSim).catch(() => {}),
-  }
+  // useCallback ensures stable references so consumers don't re-render unnecessarily
+  const play     = useCallback(() => api.simPlay().then(setSim).catch(() => {}), [])
+  const pause    = useCallback(() => api.simPause().then(setSim).catch(() => {}), [])
+  const reset    = useCallback(() => api.simReset().then(setSim).catch(() => {}), [])
+  const step     = useCallback(() => api.simStep().then(setSim).catch(() => {}), [])
+  const setSpeed = useCallback((s) => api.simSetSpeed(s).then(setSim).catch(() => {}), [])
 
   return (
-    <SimCtx.Provider value={{ sim, connected, ...controls }}>
+    <SimCtx.Provider value={{ sim, connected, play, pause, reset, step, setSpeed }}>
       {children}
     </SimCtx.Provider>
   )

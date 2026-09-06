@@ -17,7 +17,9 @@ export default function MarkerPopup({ location }) {
       )}
       <div style={s.row}>
         <span style={s.label}>Coords</span>
-        <span style={s.value}>{location.lat.toFixed(4)}, {location.lng.toFixed(4)}</span>
+        <span style={s.value}>
+          {location.lat != null ? location.lat.toFixed(4) : '—'}, {location.lng != null ? location.lng.toFixed(4) : '—'}
+        </span>
       </div>
     </div>
   )

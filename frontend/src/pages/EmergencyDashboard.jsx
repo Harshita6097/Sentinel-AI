@@ -118,6 +118,9 @@ function DashboardInner() {
 
   useEffect(() => {
     fetchIncidents()
+    // Poll every 5s so incidents added from other sources appear automatically
+    const t = setInterval(fetchIncidents, 5000)
+    return () => clearInterval(t)
   }, [fetchIncidents])
 
   const handleSubmit = async (text) => {
