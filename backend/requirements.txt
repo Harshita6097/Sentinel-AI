@@ -3,11 +3,11 @@ uvicorn[standard]==0.32.1
 python-dotenv==1.0.1
 pydantic==2.10.3
 httpx==0.28.0
+python-multipart==0.0.20
 
-# AI / ML (future)
-# langgraph
-# transformers
-# torch
-# osmnx
-# networkx
-# chromadb
+# AI / ML (future — uncomment when weights are available in D:\GOALS\Models\)
+# transformers==4.44.0
+# torch==2.4.0
+# Pillow==10.4.0
+# numpy==1.26.4
+# accelerate==0.33.0

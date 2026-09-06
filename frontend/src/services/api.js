@@ -16,8 +16,19 @@ async function post(path, body) {
   return res.json()
 }
 
+async function postForm(path, formData) {
+  const res = await fetch(`${BASE_URL}${path}`, { method: 'POST', body: formData })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }))
+    throw new Error(err.detail ?? `API error ${res.status}`)
+  }
+  return res.json()
+}
+
 export const api = {
+  // Map
   getLocations:    () => get('/api/map/locations'),
+  // Simulation
   getSimState:     () => get('/api/simulation/state'),
   getTimeline:     () => get('/api/simulation/timeline'),
   simPlay:         () => post('/api/simulation/play'),
@@ -25,4 +36,7 @@ export const api = {
   simReset:        () => post('/api/simulation/reset'),
   simStep:         () => post('/api/simulation/step'),
   simSetSpeed:     (speed) => post('/api/simulation/speed', { speed }),
+  // Vision
+  analyzeImage:    (file) => { const fd = new FormData(); fd.append('file', file); return postForm('/api/vision/analyze', fd) },
+  visionHealth:    () => get('/api/vision/health'),
 }

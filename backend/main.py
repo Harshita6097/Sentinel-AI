@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.map import router as map_router
 from api.simulation import router as sim_router
+from api.vision import router as vision_router
 from simulation import scheduler
 
 
@@ -25,6 +26,7 @@ app.add_middleware(
 
 app.include_router(map_router)
 app.include_router(sim_router)
+app.include_router(vision_router)
 
 
 @app.get("/health")
