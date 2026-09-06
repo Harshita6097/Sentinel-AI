@@ -1,9 +1,18 @@
+"""
+AgentState — shared LangGraph graph state.
+
+NOTE: This file is a placeholder for the future LangGraph Commander agent.
+The active simulation state lives in simulation/state_manager.py.
+The active incident state lives in services/incident_store.py.
+
+This will be wired into LangGraph in a future milestone.
+"""
 from typing import Any
 from pydantic import BaseModel
 
 
 class AgentState(BaseModel):
-    """Shared state passed between LangGraph agents."""
+    """Shared state passed between LangGraph agents (future use)."""
     session_id: str
     disaster_type: str | None = None
     affected_area: dict[str, Any] | None = None

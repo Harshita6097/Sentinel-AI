@@ -113,7 +113,11 @@ def make_id() -> str:
 
 
 def clear() -> None:
-    """Clear all incidents (used for testing / reset)."""
+    """Clear all incidents and reset counter (used for testing / reset).
+
+    WARNING: Only call this when the store is truly empty or being fully replaced.
+    Calling clear() while incidents still exist elsewhere will cause ID collisions.
+    """
     global _store, _counter
     _store = []
     _counter = 0

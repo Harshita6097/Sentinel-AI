@@ -124,8 +124,9 @@ def update_status(incident_id: str, body: StatusIn):
 def load_mock_reports():
     """
     Load all sample Kerala flood reports into the incident store.
-    Useful for demonstration and testing.
+    Clears existing incidents first to prevent duplicates on repeated calls.
     """
+    incident_store.clear()
     results = []
     for text in MOCK_REPORTS:
         inc = emergency_agent.process(text, source="mock")

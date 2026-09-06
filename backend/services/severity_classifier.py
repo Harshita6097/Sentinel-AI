@@ -31,7 +31,6 @@ _TEXT_SIGNALS: list[tuple[str, int, str]] = [
     ("patient",          15, "Patients at risk"),
     ("medical",          10, "Medical emergency"),
     # Vulnerable groups
-    ("child",            15, "Children at risk"),
     ("children",         15, "Children at risk"),
     ("elderly",          12, "Elderly persons at risk"),
     ("pregnant",         15, "Pregnant persons at risk"),

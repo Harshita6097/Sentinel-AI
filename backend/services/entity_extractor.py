@@ -27,19 +27,19 @@ _FACILITY_PATTERNS = [
 
 # ── Incident type keywords ────────────────────────────────────────────────────
 _INCIDENT_KEYWORDS = {
-    "flood":     ["flood", "flooding", "inundated", "submerged", "waterlogged", "overflow", "deluge"],
+    "flood":     ["flood", "flooding", "inundated", "submerged", "waterlogged", "deluge"],
     "landslide": ["landslide", "mudslide", "rockfall", "debris", "collapse"],
     "fire":      ["fire", "blaze", "burning", "flames", "smoke"],
     "medical":   ["medical", "injured", "casualty", "casualties", "unconscious", "cardiac", "sos"],
     "rescue":    ["trapped", "stranded", "stuck", "rescue", "evacuation", "evacuate"],
-    "shelter":   ["shelter", "capacity", "overcrowded", "full", "overflow"],
+    "shelter":   ["shelter", "capacity", "overcrowded", "full"],
     "road":      ["road blocked", "road closed", "highway blocked", "bridge collapsed", "traffic"],
 }
 
 # ── Urgency signal words ──────────────────────────────────────────────────────
 _URGENCY_WORDS = [
     "urgent", "immediately", "critical", "emergency", "help", "sos",
-    "trapped", "dying", "dead", "casualties", "critical", "danger",
+    "trapped", "dying", "dead", "casualties", "danger",
     "life-threatening", "mayday",
 ]
 
