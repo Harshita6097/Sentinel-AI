@@ -81,4 +81,8 @@ export const api = {
   getDecisionLog:          () => get('/api/commander/decision-log'),
   recompute:               () => post('/api/commander/recompute'),
   resetCommander:          () => post('/api/commander/reset'),
+  // Dashboard aggregation
+  getDashboardState:       () => get('/api/dashboard/state'),
+  getDashboardEvents:      () => get('/api/dashboard/events'),
+  getDashboardAlerts:      () => get('/api/dashboard/alerts'),
 }

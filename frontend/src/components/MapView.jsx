@@ -1,7 +1,10 @@
 import { MapContainer, TileLayer, CircleMarker, Popup, Polyline } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
-import { useSim } from '../context/SimulationContext'
+import { useContext } from 'react'
 import MarkerPopup from './MarkerPopup'
+
+// SimulationContext — used by legacy pages
+import { useSim } from '../context/SimulationContext'
 
 const BASE_COLOR = {
   Hospital:  '#ef4444',
@@ -35,23 +38,31 @@ function resolveMarker(loc, overrides) {
   return { color, radius, fillOpacity, status }
 }
 
-// Build a node-id → [lat, lng] lookup from the road network
 function buildNodeIndex(network) {
   if (!network?.nodes) return {}
   return Object.fromEntries(network.nodes.map(n => [n.id, [n.lat, n.lng]]))
 }
 
-// Convert a route (array of node ids) to LatLng pairs
 function routeToLatLngs(route, nodeIndex) {
   return route.map(id => nodeIndex[id]).filter(Boolean)
 }
 
-export default function MapView({ locations, network, routes }) {
+/**
+ * MapView — renders the Kerala Leaflet map.
+ *
+ * Props:
+ *   locations  — array of map location objects
+ *   network    — road graph {nodes, edges}
+ *   routes     — active logistics assignments
+ *   overrides  — optional location_overrides dict (from DashboardContext).
+ *                If omitted, reads from SimulationContext (legacy pages).
+ */
+export default function MapView({ locations, network, routes, overrides: overridesProp }) {
+  // Fall back to SimulationContext when overrides not passed as prop
   const { sim } = useSim()
-  const overrides = sim.location_overrides
-  const nodeIndex = buildNodeIndex(network)
+  const overrides = overridesProp ?? sim.location_overrides
 
-  // Blocked edge midpoints for red overlay markers
+  const nodeIndex   = buildNodeIndex(network)
   const blockedEdges = network?.edges?.filter(e => e.blocked) ?? []
 
   return (
@@ -63,7 +74,7 @@ export default function MapView({ locations, network, routes }) {
       />
 
       {/* Location markers */}
-      {locations.map(loc => {
+      {(locations ?? []).map(loc => {
         const { color, radius, fillOpacity, status } = resolveMarker(loc, overrides)
         return (
           <CircleMarker
@@ -115,7 +126,7 @@ export default function MapView({ locations, network, routes }) {
         )
       })}
 
-      {/* Destination markers for active assignments */}
+      {/* Destination markers */}
       {(routes ?? []).filter(r => r.reachable).map(r => {
         const pos = nodeIndex[r.destination]
         if (!pos) return null
