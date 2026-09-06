@@ -1,33 +1,15 @@
-# ── Core API ──────────────────────────────────────────────────────────────────
 fastapi==0.115.5
 uvicorn[standard]==0.32.1
 python-dotenv==1.0.1
 pydantic==2.10.3
 httpx==0.28.0
 python-multipart==0.0.20
-
-# ── AI Orchestration ──────────────────────────────────────────────────────────
 langgraph==0.2.55
 langchain-core==0.3.28
 
-# ── Vector Store ──────────────────────────────────────────────────────────────
-chromadb==0.5.23
-
-# ── Semantic Similarity ───────────────────────────────────────────────────────
-sentence-transformers==3.3.1
-
-# ── GIS / Routing ─────────────────────────────────────────────────────────────
-osmnx==1.9.4
-networkx==3.4.2
-
-# ── Vision Models (uncomment when weights are available in MODELS_DIR) ────────
+# AI / ML (future — uncomment when weights are available in D:\GOALS\Models\)
 # transformers==4.44.0
 # torch==2.4.0
 # Pillow==10.4.0
 # numpy==1.26.4
 # accelerate==0.33.0
-
-# ── Testing ───────────────────────────────────────────────────────────────────
-pytest==8.3.4
-pytest-asyncio==0.24.0
-httpx==0.28.0
