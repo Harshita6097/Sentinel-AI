@@ -75,4 +75,10 @@ export const api = {
   recalculateRoutes:       () => post('/api/logistics/recalculate'),
   injectLogisticsEvent:    (body) => post('/api/logistics/event', body),
   resetLogistics:          () => post('/api/logistics/reset'),
+  // Commander
+  getCOP:                  () => get('/api/commander/cop'),
+  getRecommendations:      () => get('/api/commander/recommendations'),
+  getDecisionLog:          () => get('/api/commander/decision-log'),
+  recompute:               () => post('/api/commander/recompute'),
+  resetCommander:          () => post('/api/commander/reset'),
 }

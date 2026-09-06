@@ -3,8 +3,10 @@ import Dashboard from './pages/Dashboard'
 import VisionDashboard from './pages/VisionDashboard'
 import EmergencyDashboard from './pages/EmergencyDashboard'
 import LogisticsDashboard from './pages/LogisticsDashboard'
+import CommandCenter from './pages/CommandCenter'
 
 const PAGES = {
+  commander: CommandCenter,
   dashboard: Dashboard,
   vision:    VisionDashboard,
   emergency: EmergencyDashboard,
@@ -12,6 +14,7 @@ const PAGES = {
 }
 
 const NAV = [
+  { id: 'commander', label: '🧠 Commander' },
   { id: 'dashboard', label: '🗺️ Command Center' },
   { id: 'vision',    label: '🛰️ Vision Agent' },
   { id: 'emergency', label: '🚨 Emergency Intel' },
@@ -19,7 +22,7 @@ const NAV = [
 ]
 
 export default function App() {
-  const [page, setPage] = useState('dashboard')
+  const [page, setPage] = useState('commander')
   const Page = PAGES[page] ?? Dashboard
 
   return (
