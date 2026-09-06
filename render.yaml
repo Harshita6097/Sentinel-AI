@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: sentinel-ai-backend
+    runtime: python
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: USE_MOCK_MODELS
+        value: "true"
+      - key: CHROMA_PERSIST_DIR
+        value: /opt/render/project/chroma
+      - key: MODELS_DIR
+        value: /opt/render/project/models
+      # Set these in the Render dashboard (not here):
+      # - key: OPENWEATHER_API_KEY
+      # - key: FRONTEND_URL
