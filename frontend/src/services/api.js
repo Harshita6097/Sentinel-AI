@@ -81,6 +81,12 @@ export const api = {
   getDecisionLog:          () => get('/api/commander/decision-log'),
   recompute:               () => post('/api/commander/recompute'),
   resetCommander:          () => post('/api/commander/reset'),
+  // Reasoning
+  reasoningStatus:         () => get('/api/reasoning/status'),
+  generateSitrep:          () => post('/api/reasoning/sitrep'),
+  explainDecision:         (index = 0) => post('/api/reasoning/explain', { recommendation_index: index }),
+  generateHandover:        () => post('/api/reasoning/handover'),
+  generateReport:          () => post('/api/reasoning/report'),
   // Dashboard aggregation
   getDashboardState:       () => get('/api/dashboard/state'),
   getDashboardEvents:      () => get('/api/dashboard/events'),

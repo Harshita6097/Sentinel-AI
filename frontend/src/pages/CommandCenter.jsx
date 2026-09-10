@@ -5,6 +5,10 @@ import COPPanel from '../components/COPPanel'
 import RescueQueue from '../components/RescueQueue'
 import ConfidenceBreakdown from '../components/ConfidenceBreakdown'
 import DecisionLog from '../components/DecisionLog'
+import SitrepPanel from '../components/SitrepPanel'
+import AIExplanationCard from '../components/AIExplanationCard'
+import HandoverPanel from '../components/HandoverPanel'
+import ReportGenerator from '../components/ReportGenerator'
 import { api } from '../services/api'
 
 function CommandCenterInner() {
@@ -17,7 +21,8 @@ function CommandCenterInner() {
   const [sources,         setSources]         = useState([])
   const [loading,         setLoading]         = useState(false)
   const [lastRecompute,   setLastRecompute]   = useState(null)
-  const [tab,             setTab]             = useState('queue')  // 'queue' | 'log'
+  const [tab,             setTab]             = useState('queue')  // 'queue' | 'log' | 'ai'
+  const [reasoningKey,    setReasoningKey]    = useState(0)
 
   // Fetch COP and log on a 3s poll
   const fetchState = useCallback(() => {
@@ -55,6 +60,7 @@ function CommandCenterInner() {
         setSources(result.recommendations[0].evidence_sources ?? [])
       }
       setLastRecompute(new Date().toLocaleTimeString())
+      setReasoningKey(k => k + 1)
       fetchState()
     } catch { /* ignore */ } finally {
       setLoading(false)
@@ -114,6 +120,9 @@ function CommandCenterInner() {
             <button style={{ ...s.tab, ...(tab === 'log' ? s.tabActive : {}) }} onClick={() => setTab('log')}>
               Decision Log ({decisionLog.length})
             </button>
+            <button style={{ ...s.tab, ...(tab === 'ai' ? s.tabActive : {}) }} onClick={() => setTab('ai')}>
+              🧠 AI
+            </button>
           </div>
 
           {tab === 'queue' ? (
@@ -122,9 +131,16 @@ function CommandCenterInner() {
               onRecompute={handleRecompute}
               loading={loading}
             />
-          ) : (
+          ) : tab === 'log' ? (
             <div style={s.logWrap}>
               <DecisionLog log={decisionLog} />
+            </div>
+          ) : (
+            <div style={{ ...s.logWrap, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <SitrepPanel triggerKey={reasoningKey} />
+              <AIExplanationCard triggerKey={reasoningKey} />
+              <HandoverPanel />
+              <ReportGenerator />
             </div>
           )}
         </div>
@@ -176,6 +192,7 @@ const AGENTS = [
   { name: 'Emergency',   color: '#22c55e', state: 'Active' },
   { name: 'Logistics',   color: '#22c55e', state: 'Active' },
   { name: 'Commander',   color: '#3b82f6', state: 'Orchestrating' },
+  { name: 'Reasoning',   color: '#a855f7', state: 'Qwen 2.5 / Fallback' },
 ]
 
 function _copCompleteness(cop) {
