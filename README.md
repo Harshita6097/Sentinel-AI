@@ -1,6 +1,6 @@
 # 🛰️ Sentinel AI
 
-> **Multi-Agent AI Emergency Command Center** — Real-time disaster response for the Kerala flood scenario using SegFormer, Florence-2, OSMnx, LangGraph, and ChromaDB.
+> **Multi-Agent AI Emergency Command Center** — Real-time disaster response for the Kerala flood scenario using SegFormer, Florence-2, OSMnx, LangGraph, ChromaDB, and a local Qwen 2.5 LLM reasoning layer.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Backend: FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi)](backend/)
@@ -8,6 +8,8 @@
 [![Orchestration: LangGraph](https://img.shields.io/badge/Orchestration-LangGraph-FF6B35)](backend/graph/)
 [![Vector DB: ChromaDB](https://img.shields.io/badge/VectorDB-ChromaDB-6B4FBB)](backend/services/chroma_store.py)
 [![Tests: pytest](https://img.shields.io/badge/Tests-pytest-0A9EDC)](backend/tests/)
+[![LLM: Qwen 2.5](https://img.shields.io/badge/LLM-Qwen%202.5%203B-8B5CF6)](backend/agents/reasoning_agent.py)
+[![Ollama](https://img.shields.io/badge/Inference-Ollama-000000)](backend/services/ollama_service.py)
 
 ---
 
@@ -22,6 +24,7 @@ Sentinel AI fuses multi-source disaster data through a pipeline of six specializ
 | OSM road network | OSMnx + NetworkX | Passable route graph + ETAs |
 | Emergency SOS reports | Emergency Intelligence Agent | Victim priority list |
 | All of the above | LangGraph Commander | Rescue priorities + resource allocation + confidence scores + natural-language explanation |
+| Commander output + COP | Reasoning Agent (Qwen 2.5 via Ollama) | SITREP · decision explanation · handover briefing · after action report |
 
 ---
 
@@ -31,15 +34,16 @@ Sentinel AI fuses multi-source disaster data through a pipeline of six specializ
 frontend (React + Vite)
     │  REST polling (2–5s)
 backend (FastAPI)
-    ├── api/              — 35 route handlers across 7 routers
-    ├── agents/           — 6 LangGraph agent nodes
+    ├── api/              — 40 route handlers across 8 routers
+    ├── agents/           — 7 LangGraph agent nodes
     │   ├── vision_agent      SegFormer + Florence-2
     │   ├── emergency_agent   NLP pipeline + ChromaDB
     │   ├── weather_agent     OWM API + simulation fallback
     │   ├── logistics_agent   OSMnx + Dijkstra routing
-    │   └── commander_agent   Evidence fusion + priority scoring
-    ├── graph/            — LangGraph StateGraph (6 nodes, sequential)
-    ├── services/         — Shared singletons (COP, ChromaDB, OSM, models)
+    │   ├── commander_agent   Evidence fusion + priority scoring
+    │   └── reasoning_agent   Qwen 2.5 via Ollama + deterministic fallback
+    ├── graph/            — LangGraph StateGraph (7 nodes, sequential)
+    ├── services/         — Shared singletons (COP, ChromaDB, OSM, models, Ollama)
     ├── simulation/       — Kerala flood scenario engine (16 events)
     └── utils/            — Logging, startup checks
 
@@ -47,6 +51,13 @@ chroma/                   — ChromaDB persistent vector store
 datasets/osm/             — Cached Kerala road network (GraphML)
 D:\GOALS\Models\          — Local model weights (SegFormer, Florence-2)
 ```
+
+### Agent Pipeline
+```
+Simulation → Weather → Vision → Emergency → Logistics → Commander → Reasoning Agent → Dashboard
+```
+The Reasoning Agent is the final node. It reads Commander output and COP state, then generates
+human-readable narratives. It never makes operational decisions — Commander remains the source of truth.
 
 ### COP Architecture Rule
 **No agent passes data directly to another.** All inter-agent communication flows through the COP singleton. This enforces clean separation and makes every agent independently testable.
@@ -63,6 +74,7 @@ D:\GOALS\Models\          — Local model weights (SegFormer, Florence-2)
 | Flood Segmentation | SegFormer (nvidia/segformer-b2) |
 | Scene Description | Florence-2 (microsoft/Florence-2-base) |
 | Semantic Search | Sentence Transformers (all-MiniLM-L6-v2) |
+| Local LLM | Qwen 2.5 3B Instruct via Ollama |
 | Road Network | OSMnx 1.9, NetworkX 3.4 |
 | Vector Store | ChromaDB 0.5 |
 | Weather | OpenWeatherMap API (free tier) |
@@ -105,6 +117,34 @@ npm run dev
 ```
 
 App: `http://localhost:5173`
+
+---
+
+## Activating the Local LLM (Reasoning Agent)
+
+The Reasoning Agent uses **Qwen 2.5 3B Instruct** running locally via Ollama.
+The system works fully without it — all outputs fall back to deterministic templates.
+
+1. Install Ollama from [ollama.com](https://ollama.com)
+2. Pull the model:
+   ```bash
+   ollama pull qwen2.5:3b-instruct
+   ```
+3. Ollama starts automatically on Windows. Verify:
+   ```bash
+   ollama list
+   # should show qwen2.5:3b-instruct
+   ```
+4. Check status in the running app:
+   ```
+   GET http://localhost:8000/api/reasoning/status
+   ```
+
+Configure in `.env` (defaults work out of the box):
+```
+OLLAMA_HOST=http://127.0.0.1:11434
+OLLAMA_MODEL=qwen2.5:3b-instruct
+```
 
 ---
 
@@ -171,6 +211,7 @@ Test coverage:
 - `test_commander.py` — priority engine, evidence fusion, COP
 - `test_vision_dashboard.py` — vision analysis, dashboard aggregation
 - `test_workflow.py` — full LangGraph end-to-end pipeline
+- `test_reasoning.py` — reasoning agent fallback and prompt builder
 
 ---
 
@@ -179,14 +220,22 @@ Test coverage:
 ```
 Sentinel-AI/
 ├── frontend/              # React + Vite SPA
-│   ├── src/components/    # 30+ UI components
+│   ├── src/components/    # 34+ UI components
+│   │   ├── SitrepPanel.jsx       # AI Situation Report
+│   │   ├── AIExplanationCard.jsx # Commander decision explanation
+│   │   ├── HandoverPanel.jsx     # Shift handover briefing
+│   │   └── ReportGenerator.jsx  # After Action Report
 │   ├── src/context/       # DashboardContext (unified polling hub)
-│   └── src/pages/         # Dashboard, Vision, Emergency, Logistics
+│   └── src/pages/         # Dashboard, Vision, Emergency, Logistics, CommandCenter
 ├── backend/
-│   ├── agents/            # 6 LangGraph agent implementations
-│   ├── api/               # 7 FastAPI routers (35 endpoints)
-│   ├── graph/             # LangGraph StateGraph + nodes + edges
-│   ├── services/          # COP, ChromaDB, OSMnx, models, routing
+│   ├── agents/            # 7 LangGraph agent implementations
+│   │   └── reasoning_agent.py  # Qwen 2.5 LLM + deterministic fallback
+│   ├── api/               # 8 FastAPI routers (40 endpoints)
+│   │   └── reasoning.py        # /api/reasoning/* (5 endpoints)
+│   ├── graph/             # LangGraph StateGraph (7 nodes)
+│   ├── services/          # COP, ChromaDB, OSMnx, models, Ollama
+│   │   ├── ollama_service.py   # Ollama HTTP client with retry/fallback
+│   │   └── prompt_builder.py   # COP-grounded prompt templates
 │   ├── simulation/        # Kerala flood scenario engine
 │   ├── tests/             # pytest test suite
 │   └── utils/             # Logging, startup checks
@@ -207,6 +256,7 @@ Sentinel-AI/
 1. Connect GitHub repo to Render
 2. Select `render.yaml` (auto-detected)
 3. Set secret env vars in Render dashboard: `OPENWEATHER_API_KEY`, `FRONTEND_URL`
+   > Note: Ollama runs locally only — the Reasoning Agent uses deterministic fallback on Render.
 4. Deploy
 
 ### Frontend → Vercel
@@ -236,6 +286,10 @@ Sentinel-AI/
 - [x] Production pytest test suite (54 tests)
 - [x] Render + Vercel deployment configs
 - [x] Architecture + API documentation
+- [x] Local LLM Reasoning Agent (Qwen 2.5 3B via Ollama)
+- [x] SITREP, decision explanation, handover, and AAR generation
+- [x] Graceful fallback to deterministic templates when Ollama is offline
+- [x] Hybrid agentic AI system (deterministic Commander + generative Reasoning)
 
 ---
 
