@@ -165,7 +165,22 @@ def node_commander(state: AgentState) -> AgentState:
         }
 
 
-# ── helpers ───────────────────────────────────────────────────────────────────
+# ── Node: reasoning ─────────────────────────────────────────────────────────
+
+def node_reasoning(state: AgentState) -> AgentState:
+    """Generate narrative SITREP from Commander output via local LLM (or fallback)."""
+    try:
+        from agents.reasoning_agent import reasoning_agent
+        from api.reasoning import set_cached_recommendations
+        recs = state.get("recommendations", [])
+        set_cached_recommendations(recs)
+        sitrep = reasoning_agent.generate_sitrep(recs)
+        return {**state, "reasoning_done": True, "sitrep": sitrep}
+    except Exception as e:
+        return {**state, "reasoning_done": False, "errors": state.get("errors", []) + [f"reasoning: {e}"]}
+
+
+# ── helpers ─────────────────────────────────────────────────────────────────────
 
 # Edge-id → location mapping (mirrors road_closure_manager._LOCATION_TO_EDGES)
 _EDGE_LOCATION: dict[str, str] = {

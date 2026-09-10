@@ -22,6 +22,7 @@ from graph.nodes import (
     node_emergency,
     node_logistics,
     node_commander,
+    node_reasoning,
 )
 
 
@@ -34,6 +35,7 @@ def _build_graph() -> StateGraph:
     g.add_node("emergency",  node_emergency)
     g.add_node("logistics",  node_logistics)
     g.add_node("commander",  node_commander)
+    g.add_node("reasoning",  node_reasoning)
 
     g.set_entry_point("simulation")
 
@@ -42,7 +44,8 @@ def _build_graph() -> StateGraph:
     g.add_edge("vision",     "emergency")
     g.add_edge("emergency",  "logistics")
     g.add_edge("logistics",  "commander")
-    g.add_edge("commander",  END)
+    g.add_edge("commander",  "reasoning")
+    g.add_edge("reasoning",  END)
 
     return g
 

@@ -23,6 +23,7 @@ class AgentState(TypedDict, total=False):
     emergency_done: bool
     logistics_done: bool
     commander_done: bool
+    reasoning_done: bool
 
     # Commander outputs (written by commander node, read by API)
     recommendations: list[dict]

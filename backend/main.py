@@ -14,6 +14,7 @@ from api.emergency import router as emergency_router
 from api.logistics import router as logistics_router
 from api.commander import router as commander_router
 from api.dashboard import router as dashboard_router
+from api.reasoning import router as reasoning_router
 from simulation import scheduler
 
 configure_logging()
@@ -59,6 +60,7 @@ app.include_router(emergency_router)
 app.include_router(logistics_router)
 app.include_router(commander_router)
 app.include_router(dashboard_router)
+app.include_router(reasoning_router)
 
 
 @app.get("/health")
