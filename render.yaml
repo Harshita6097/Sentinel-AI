@@ -16,9 +16,15 @@ services:
       - key: USE_MOCK_MODELS
         value: "true"
       - key: CHROMA_PERSIST_DIR
-        value: /opt/render/project/chroma
+        value: /tmp/chroma
       - key: MODELS_DIR
-        value: /opt/render/project/models
-      # Set these in the Render dashboard (not here):
+        value: /tmp/models
+      - key: SENTENCE_MODEL
+        value: all-MiniLM-L6-v2
+      - key: WEATHER_LIVE
+        value: "false"
+      # Set these in the Render dashboard (secret env vars):
       # - key: OPENWEATHER_API_KEY
+      #   value: your_key_here
       # - key: FRONTEND_URL
+      #   value: https://your-app.vercel.app
