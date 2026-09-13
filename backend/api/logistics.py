@@ -56,7 +56,7 @@ class AssignRequest(BaseModel):
 class EventRequest(BaseModel):
     event_type: str
     location: str
-    event_id: int
+    event_id: int = 0   # optional — defaults to 0 for manual injection
 
 
 # ── endpoints ────────────────────────────────────────────────────────────────
