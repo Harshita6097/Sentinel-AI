@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from 'react'
 import { useDashboard } from '../context/DashboardContext'
+import { api } from '../services/api'
 import SitrepPanel from './SitrepPanel'
 import COPPanel from './COPPanel'
 import ConfidenceBreakdown from './ConfidenceBreakdown'
@@ -66,6 +67,21 @@ function MapOverlay({ layers, onToggle }) {
 }
 
 function HeroCard({ rec, onRecompute, loading }) {
+  const { sim } = useDashboard()
+  const [dispatching, setDispatching] = useState(false)
+
+  const handleDispatch = async () => {
+    if (!rec?.assigned_resource) return
+    setDispatching(true)
+    try {
+      await api.assignResource({
+        destination: rec.location,
+        resource_id: rec.assigned_resource,
+        current_sim_minutes: sim?.current_minutes ?? 540,
+      })
+    } catch { /* ignore */ } finally { setDispatching(false) }
+  }
+
   if (!rec) return (
     <div style={s.heroEmpty}>
       <div style={{ color:'var(--text-3)', fontSize:12, textAlign:'center' }}>No priority data yet.</div>
@@ -92,7 +108,9 @@ function HeroCard({ rec, onRecompute, loading }) {
         <div style={s.heroItem}><div style={s.heroN}>{unit}</div><div style={s.heroL}>Unit</div></div>
         <div style={s.heroItem}><div style={s.heroN}>{score}%</div><div style={s.heroL}>Confidence</div></div>
       </div>
-      <button style={s.dispatchBtn}>Dispatch {unit}</button>
+      <button style={{ ...s.dispatchBtn, opacity: dispatching ? 0.6 : 1 }} onClick={handleDispatch} disabled={dispatching || !rec.assigned_resource}>
+        {dispatching ? 'Dispatching…' : `Dispatch ${unit}`}
+      </button>
     </div>
   )
 }

@@ -46,11 +46,27 @@ export function DashboardProvider({ children }) {
 
   // ── polling ──────────────────────────────────────────────────────────────
 
+  const fetchCommander = useCallback(() => {
+    api.getRecommendations().then(setRecommendations).catch(() => {})
+    api.getDecisionLog().then(setDecisionLog).catch(() => {})
+  }, [])
+
+  const prevEventCount = useRef(0)
+
   const fetchState = useCallback(() => {
     api.getDashboardState()
-      .then(d => { setState(d); setConnected(true) })
+      .then(d => {
+        setState(d)
+        setConnected(true)
+        // When new sim events fire, refresh commander data
+        const newCount = d.sim?.active_events?.length ?? 0
+        if (newCount > prevEventCount.current) {
+          prevEventCount.current = newCount
+          fetchCommander()
+        }
+      })
       .catch(() => setConnected(false))
-  }, [])
+  }, [fetchCommander])
 
   const fetchEvents = useCallback(() => {
     api.getDashboardEvents().then(setEvents).catch(() => {})
@@ -70,11 +86,6 @@ export function DashboardProvider({ children }) {
         }
       })
     }).catch(() => {})
-  }, [])
-
-  const fetchCommander = useCallback(() => {
-    api.getRecommendations().then(setRecommendations).catch(() => {})
-    api.getDecisionLog().then(setDecisionLog).catch(() => {})
   }, [])
 
   useEffect(() => {
