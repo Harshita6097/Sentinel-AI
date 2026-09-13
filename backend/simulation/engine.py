@@ -40,12 +40,16 @@ def tick() -> None:
 
 def _fire_due_events(state) -> None:
     """Trigger any timeline events whose time has been reached."""
+    newly_fired = []
     for event in get_timeline():
         if event.id not in state.triggered_ids and event.minutes <= state.current_minutes:
             state.triggered_ids.add(event.id)
             state.active_events.insert(0, event)   # newest first
             _apply_location_override(state, event)
             _notify_logistics(event, state.current_minutes)
+            newly_fired.append(event)
+    if newly_fired:
+        _run_pipeline_async(state.current_minutes, state.current_time)
 
 
 def play() -> None:
@@ -102,3 +106,18 @@ def _notify_logistics(event, current_minutes: int) -> None:
         )
     except Exception:
         pass  # logistics errors must never crash the simulation loop
+
+
+def _run_pipeline_async(sim_minutes: int, sim_time: str) -> None:
+    """Run the full LangGraph pipeline in a background thread so the tick loop is never blocked."""
+    import threading
+    def _run():
+        try:
+            from graph.workflow import run_workflow
+            from api.commander import set_last_recommendations
+            result = run_workflow(sim_minutes=sim_minutes, sim_time=sim_time)
+            recs = result.get("recommendations", [])
+            set_last_recommendations(recs)
+        except Exception:
+            pass
+    threading.Thread(target=_run, daemon=True, name="pipeline").start()

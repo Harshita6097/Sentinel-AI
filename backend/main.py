@@ -26,10 +26,38 @@ async def lifespan(app: FastAPI):
     logger.info("Sentinel AI starting up…")
     app.state.startup_report = run_startup_checks()
     scheduler.start()
+    _seed_initial_data()
     logger.info("Sentinel AI ready")
     yield
     scheduler.stop()
     logger.info("Sentinel AI shut down")
+
+
+def _seed_initial_data() -> None:
+    """Load mock incidents and run one pipeline cycle so the dashboard is never blank."""
+    import threading
+    def _run():
+        try:
+            from agents.emergency_agent import emergency_agent
+            from services import incident_store
+            from api.emergency import MOCK_REPORTS
+            if not incident_store.list_all():
+                for text in MOCK_REPORTS:
+                    emergency_agent.process(text, source="mock")
+            logger.info("Seeded %d mock incidents", len(incident_store.list_all()))
+        except Exception as exc:
+            logger.warning("Incident seeding failed: %s", exc)
+        try:
+            from graph.workflow import run_workflow
+            from api.commander import set_last_recommendations
+            from simulation.state_manager import get_state
+            sim = get_state()
+            result = run_workflow(sim_minutes=sim.current_minutes, sim_time=sim.current_time)
+            set_last_recommendations(result.get("recommendations", []))
+            logger.info("Initial pipeline run complete")
+        except Exception as exc:
+            logger.warning("Initial pipeline run failed: %s", exc)
+    threading.Thread(target=_run, daemon=True, name="seed").start()
 
 
 app = FastAPI(

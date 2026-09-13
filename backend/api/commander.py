@@ -19,6 +19,12 @@ router = APIRouter(prefix="/api/commander", tags=["commander"])
 _last_recommendations: list[dict] = []
 
 
+def set_last_recommendations(recs: list[dict]) -> None:
+    """Called by the pipeline background thread to update cached recommendations."""
+    global _last_recommendations
+    _last_recommendations = recs
+
+
 @router.get("/cop")
 def get_cop_endpoint():
     """Return the current Common Operating Picture as a flat dict."""
@@ -54,7 +60,7 @@ def recompute():
     )
 
     recs = final_state.get("recommendations", [])
-    _last_recommendations = recs
+    set_last_recommendations(recs)
 
     return {
         "status": "ok",
