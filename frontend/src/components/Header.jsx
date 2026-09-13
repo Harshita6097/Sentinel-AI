@@ -1,24 +1,78 @@
+import { useDashboard } from '../context/DashboardContext'
 import { useSim } from '../context/SimulationContext'
 
-export default function Header() {
-  const { connected, sim } = useSim()
+const ALERT_COLOR  = { Green:'var(--green)', Yellow:'var(--amber)', Orange:'var(--orange)', Red:'var(--red)' }
+const ALERT_BORDER = { Green:'rgba(34,197,94,.35)', Yellow:'rgba(245,158,11,.35)', Orange:'rgba(249,115,22,.35)', Red:'rgba(239,68,68,.35)' }
+
+export default function Header({ page, onNav }) {
+  const dash = useDashboard()
+  // useSim is always available (SimulationProvider wraps sub-pages)
+  const simCtx = useSim()
+
+  // Prefer DashboardContext values; fall back to SimulationContext on sub-pages
+  const sim        = dash?.sim        ?? simCtx?.sim        ?? { time:'--:--', paused:true, finished:false, speed:1 }
+  const cop        = dash?.cop        ?? null
+  const connected  = dash?.connected  ?? simCtx?.connected  ?? false
+  const recomputing= dash?.recomputing ?? false
+  const recompute  = dash?.recompute  ?? (() => {})
+
+  const alertLevel = cop?.weather?.alert_level ?? 'Green'
+  const isPaused   = sim.paused || sim.finished
+
+  const NAV = [
+    { id:'dashboard', label:'Dashboard' },
+    { id:'vision',    label:'Vision' },
+    { id:'emergency', label:'Emergency' },
+    { id:'logistics', label:'Logistics' },
+  ]
 
   return (
     <header style={s.header}>
+      {/* Brand */}
       <div style={s.brand}>
-        <span style={s.logo}>🛰️</span>
+        <div style={s.logo}>🛰️</div>
         <div>
-          <div style={s.title}>Sentinel AI</div>
+          <div style={s.name}>Sentinel AI</div>
           <div style={s.sub}>Emergency Command Center</div>
         </div>
       </div>
+
+      {/* Nav */}
+      <nav style={s.nav}>
+        {NAV.map(({ id, label }) => (
+          <button key={id} style={{ ...s.navBtn, ...(page === id ? s.navActive : {}) }} onClick={() => onNav(id)}>
+            {label}
+          </button>
+        ))}
+      </nav>
+
+      {/* Right controls */}
       <div style={s.right}>
-        <div style={s.pill}>
-          <span style={{ ...s.dot, background: connected ? '#22c55e' : '#f59e0b' }} />
-          {connected ? 'Backend Connected' : 'Connecting…'}
+        <div style={s.simClock}>
+          <span style={{ ...s.pauseDot, background: isPaused ? 'var(--amber)' : 'var(--green)' }} />
+          <span style={{ fontFamily:'var(--mono)', fontSize:13, fontWeight:700, color:'var(--white)' }}>
+            {sim.time}
+          </span>
+          <span style={{ fontSize:11, color:'var(--text-2)' }}>
+            · {sim.finished ? 'Finished' : isPaused ? 'Paused' : `${sim.speed}× Live`}
+          </span>
         </div>
-        <div style={s.clock}>
-          SIM {sim.time} · Kerala Flood Scenario
+
+        <div style={{ ...s.weatherPill, color: ALERT_COLOR[alertLevel], borderColor: ALERT_BORDER[alertLevel] }}>
+          ● {alertLevel} Alert
+        </div>
+
+        <button
+          style={{ ...s.recomputeBtn, opacity: recomputing ? 0.6 : 1 }}
+          onClick={recompute}
+          disabled={recomputing}
+        >
+          ↻ {recomputing ? 'Computing…' : 'Recompute'}
+        </button>
+
+        <div style={{ ...s.connPill, background: connected ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)', color: connected ? 'var(--green)' : 'var(--red)' }}>
+          <span style={{ ...s.dot, background: connected ? 'var(--green)' : 'var(--red)', boxShadow: connected ? '0 0 5px var(--green)' : 'none' }} />
+          {connected ? 'Connected' : 'Offline'}
         </div>
       </div>
     </header>
@@ -26,22 +80,19 @@ export default function Header() {
 }
 
 const s = {
-  header: {
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    padding: '0 1.5rem', height: 56, background: '#0d1117',
-    borderBottom: '1px solid #1f2937', flexShrink: 0, zIndex: 1000,
-  },
-  brand: { display: 'flex', alignItems: 'center', gap: '0.75rem' },
-  logo: { fontSize: '1.6rem' },
-  title: { color: '#f9fafb', fontWeight: 700, fontSize: '1rem', letterSpacing: '0.02em' },
-  sub: { color: '#6b7280', fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase' },
-  right: { display: 'flex', alignItems: 'center', gap: '1rem' },
-  pill: {
-    display: 'flex', alignItems: 'center', gap: '0.4rem',
-    background: '#1f2937', border: '1px solid #374151',
-    borderRadius: 9999, padding: '0.25rem 0.75rem',
-    color: '#9ca3af', fontSize: '0.75rem',
-  },
-  dot: { width: 7, height: 7, borderRadius: '50%', display: 'inline-block' },
-  clock: { color: '#4b5563', fontSize: '0.75rem', fontFamily: 'monospace' },
+  header:      { background:'var(--bg-deep)', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'center', padding:'0 var(--sp-5)', gap:'var(--sp-5)', height:56, flexShrink:0, zIndex:2000 },
+  brand:       { display:'flex', alignItems:'center', gap:'var(--sp-2)', flexShrink:0 },
+  logo:        { width:28, height:28, borderRadius:7, background:'var(--panel-2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 },
+  name:        { fontWeight:800, fontSize:14, color:'var(--white)', lineHeight:1.1 },
+  sub:         { fontSize:9.5, color:'var(--text-2)', textTransform:'uppercase', letterSpacing:'.6px' },
+  nav:         { display:'flex', gap:2 },
+  navBtn:      { padding:'7px 13px', fontSize:12.5, color:'var(--text-2)', borderRadius:'var(--r-sm)', fontWeight:600, background:'transparent', border:'none', cursor:'pointer' },
+  navActive:   { background:'var(--panel-2)', color:'var(--white)' },
+  right:       { marginLeft:'auto', display:'flex', alignItems:'center', gap:'var(--sp-3)' },
+  simClock:    { display:'flex', alignItems:'center', gap:6 },
+  pauseDot:    { width:6, height:6, borderRadius:'50%', flexShrink:0 },
+  weatherPill: { display:'flex', alignItems:'center', gap:6, fontSize:11, padding:'5px 10px', border:'1px solid', borderRadius:20, fontWeight:600 },
+  recomputeBtn:{ background:'var(--blue)', color:'#fff', border:'none', padding:'7px 13px', borderRadius:'var(--r-sm)', fontSize:11.5, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:5 },
+  connPill:    { display:'flex', alignItems:'center', gap:6, fontSize:11, padding:'5px 10px', borderRadius:20, fontWeight:700 },
+  dot:         { width:6, height:6, borderRadius:'50%', flexShrink:0 },
 }

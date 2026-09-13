@@ -68,9 +68,9 @@ export default function MapView({ locations, network, routes, overrides: overrid
   return (
     <MapContainer center={KERALA_CENTER} zoom={8} style={{ flex: 1, height: '100%' }}>
       <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-        maxZoom={19}
+        url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
+        attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+        maxZoom={20}
       />
 
       {/* Location markers */}
