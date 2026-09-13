@@ -5,9 +5,9 @@ Set USE_MOCK_MODELS=false and place weights under MODELS_DIR to activate
 real inference.
 
 Model placement:
-  D:\\GOALS\\Models\\SegFormer\\   — nvidia/segformer-b2-finetuned-ade-512-512
-  D:\\GOALS\\Models\\Florence-2\\  — microsoft/Florence-2-base (trust_remote_code)
-  Sentence Transformers download automatically to HuggingFace cache.
+  C:\\Models\\SegFormer\\          — nvidia/segformer-b2-finetuned-ade-512-512
+  C:\\Models\\Florence-2\\         — microsoft/Florence-2-base (trust_remote_code)
+  C:\\Models\\SentenceTransformer\ — all-MiniLM-L6-v2 (local weights)
 """
 import logging
 import os
@@ -15,12 +15,13 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-MODELS_DIR = Path(os.getenv("MODELS_DIR", r"D:\GOALS\Models"))
+MODELS_DIR = Path(os.getenv("MODELS_DIR", r"C:\Models"))
 USE_MOCK = os.getenv("USE_MOCK_MODELS", "true").lower() == "true"
 
 _SEGFORMER_DIR = MODELS_DIR / "SegFormer"
 _FLORENCE2_DIR = MODELS_DIR / "Florence-2"
-_SENTENCE_MODEL = os.getenv("SENTENCE_MODEL", "all-MiniLM-L6-v2")
+# SENTENCE_MODEL can be a local path or a HuggingFace model name
+_SENTENCE_MODEL = os.getenv("SENTENCE_MODEL", str(MODELS_DIR / "SentenceTransformer"))
 
 # Lazy singletons
 _segformer_model = None
@@ -85,8 +86,15 @@ def load_sentence_transformer():
         return _sentence_model
     try:
         from sentence_transformers import SentenceTransformer
-        logger.info("Loading SentenceTransformer: %s", _SENTENCE_MODEL)
-        _sentence_model = SentenceTransformer(_SENTENCE_MODEL)
+        # Prefer local path; fall back to HuggingFace model name
+        model_path = _SENTENCE_MODEL
+        local = Path(model_path)
+        if local.exists():
+            logger.info("Loading SentenceTransformer from local path: %s", local)
+        else:
+            model_path = "all-MiniLM-L6-v2"
+            logger.info("Local SentenceTransformer not found, loading from HuggingFace: %s", model_path)
+        _sentence_model = SentenceTransformer(model_path)
         logger.info("SentenceTransformer loaded successfully")
         return _sentence_model
     except Exception as exc:
@@ -104,4 +112,5 @@ def models_status() -> dict:
         "models_dir": str(MODELS_DIR),
         "segformer_path": str(_SEGFORMER_DIR),
         "florence2_path": str(_FLORENCE2_DIR),
+        "sentence_transformer_path": _SENTENCE_MODEL,
     }

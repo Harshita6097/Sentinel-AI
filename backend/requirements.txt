@@ -11,21 +11,21 @@ langgraph==0.2.55
 langchain-core==0.3.28
 
 # ── Vector Store ──────────────────────────────────────────────────────────────
-chromadb==0.5.23
+chromadb>=1.5.9
 
 # ── Semantic Similarity ───────────────────────────────────────────────────────
 sentence-transformers==3.3.1
 
 # ── GIS / Routing ─────────────────────────────────────────────────────────────
-osmnx==1.9.4
+osmnx==2.1.1
 networkx==3.4.2
 
-# ── Vision Models (uncomment when weights are available in MODELS_DIR) ────────
-# transformers==4.44.0
-# torch==2.4.0
-# Pillow==10.4.0
-# numpy==1.26.4
-# accelerate==0.33.0
+# ── Vision Models ─────────────────────────────────────────────────────────────
+transformers>=4.44.0
+torch>=2.4.0
+Pillow>=10.4.0
+numpy>=1.26.4
+accelerate>=0.33.0
 
 # ── Testing ───────────────────────────────────────────────────────────────────
 pytest==8.3.4

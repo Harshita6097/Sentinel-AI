@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 
 _OSM_CACHE = Path(__file__).parent.parent / "datasets" / "osm" / "kerala_drive.graphml"
 
-# Kerala bounding box (south, west, north, east)
-_KERALA_BBOX = (8.17, 74.85, 12.78, 77.60)
+# Kerala bounding box — OSMnx 2.x format: (left, bottom, right, top) = (west, south, east, north)
+_KERALA_BBOX = (74.85, 8.17, 77.60, 12.78)
 
 _LOCATION_COORDS: dict[str, tuple[float, float]] = {
     "Kochi":              (9.9312,  76.2673),
@@ -52,7 +52,7 @@ def get_osm_graph():
             G = ox.load_graphml(_OSM_CACHE)
         else:
             logger.info("Downloading Kerala drive network from OSM (one-time)…")
-            G = ox.graph_from_bbox(*_KERALA_BBOX, network_type="drive", simplify=True)
+            G = ox.graph_from_bbox(_KERALA_BBOX, network_type="drive", simplify=True)
             _OSM_CACHE.parent.mkdir(parents=True, exist_ok=True)
             ox.save_graphml(G, _OSM_CACHE)
             logger.info("OSM graph cached at %s", _OSM_CACHE)
