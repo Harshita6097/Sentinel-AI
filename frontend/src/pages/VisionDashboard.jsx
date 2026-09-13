@@ -7,15 +7,20 @@ const RISK_COLOR = { Low:'var(--green)', Medium:'var(--amber)', High:'var(--oran
 const DEPTH_LABEL = { shallow:'< 30 cm', moderate:'30–80 cm', deep:'> 80 cm' }
 
 const SAMPLES = [
-  { id:'alappuzha_2018_08_17', label:'Alappuzha_2018_08_17', sub:'2018 flood archive', color:'#1e3a5f' },
-  { id:'kuttanad_2018_08_18',  label:'Kuttanad_2018_08_18',  sub:'2018 flood archive', color:'#243244' },
-  { id:'ernakulam_2018_08_16', label:'Ernakulam_2018_08_16', sub:'2018 flood archive', color:'#1a2d4a' },
-  { id:'pathanamthitta_2018',  label:'Pathanamthitta_2018',  sub:'2018 flood archive', color:'#1f3550' },
+  { id:'alappuzha_2018_08_17', label:'Alappuzha — Coastal Belt', sub:'62% flood coverage · Critical', color:'#1e3a5f' },
+  { id:'kuttanad_2018_08_18',  label:'Kuttanad — Backwaters',    sub:'48% flood coverage · High',     color:'#243244' },
+  { id:'ernakulam_2018_08_16', label:'Ernakulam — Urban Fringe', sub:'31% flood coverage · High',     color:'#1a2d4a' },
+  { id:'pathanamthitta_2018',  label:'Pathanamthitta — Delta',   sub:'55% flood coverage · Critical', color:'#1f3550' },
 ]
 
 function LeftPanel({ onResult, loading, setLoading }) {
   const [selected, setSelected] = useState(null)
   const [dragOver, setDragOver] = useState(false)
+  const [modelMode, setModelMode] = useState('mock')
+
+  useState(() => {
+    api.visionHealth().then(h => setModelMode(h.mock_mode ? 'mock' : 'real')).catch(() => {})
+  }, [])
 
   const analyze = async (file) => {
     setLoading(true)
@@ -76,7 +81,7 @@ function LeftPanel({ onResult, loading, setLoading }) {
       </div>
 
       <div style={s.modelStatus}>
-        {[['SegFormer (flood detection)','var(--green)','Ready'],['Florence-2 (scene description)','var(--green)','Ready'],['Mode','var(--text-2)','Simulation data']].map(([name,c,badge]) => (
+        {[['SegFormer (flood detection)','var(--green)','Ready'],['Florence-2 (scene description)','var(--green)','Ready'],['Mode','var(--blue)', modelMode === 'real' ? 'Real inference' : 'Simulation data']].map(([name,c,badge]) => (
           <div key={name} style={s.modelRow}>
             <span style={{ fontSize:11.5, color:'var(--text-1)', fontWeight:600 }}>{name}</span>
             <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:10, color:c }}>
