@@ -10,6 +10,7 @@
 [![Tests: pytest](https://img.shields.io/badge/Tests-pytest-0A9EDC)](backend/tests/)
 [![LLM: Qwen 2.5](https://img.shields.io/badge/LLM-Qwen%202.5%203B-8B5CF6)](backend/agents/reasoning_agent.py)
 [![Ollama](https://img.shields.io/badge/Inference-Ollama-000000)](backend/services/ollama_service.py)
+[![Python: 3.13](https://img.shields.io/badge/Python-3.13-3776AB?logo=python)](backend/requirements.txt)
 
 ---
 
@@ -76,7 +77,7 @@ human-readable narratives. It never makes operational decisions — Commander re
 | Semantic Search | Sentence Transformers (all-MiniLM-L6-v2) |
 | Local LLM | Qwen 2.5 3B Instruct via Ollama |
 | Road Network | OSMnx 1.9, NetworkX 3.4 |
-| Vector Store | ChromaDB 0.5 |
+| Vector Store | ChromaDB 1.5.9 |
 | Weather | OpenWeatherMap API (free tier) |
 | Deployment | Vercel (frontend) · Render (backend) |
 
@@ -85,8 +86,9 @@ human-readable narratives. It never makes operational decisions — Commander re
 ## Quick Start
 
 ### Prerequisites
-- Python 3.11+
+- Python 3.13+
 - Node.js 20+
+- Ollama (optional, for local LLM)
 
 ### Backend
 
@@ -154,23 +156,28 @@ By default, Sentinel AI runs in **mock mode** — all AI outputs are determinist
 
 To activate real inference:
 
-1. Download model weights:
+1. Download model weights into a local directory (e.g. `C:\Models\`):
    ```
-   D:\GOALS\Models\SegFormer\    ← nvidia/segformer-b2-finetuned-ade-512-512
-   D:\GOALS\Models\Florence-2\   ← microsoft/Florence-2-base
+   C:\Models\SegFormer\           ← nvidia/segformer-b2-finetuned-ade-512-512
+   C:\Models\Florence-2\          ← microsoft/Florence-2-base
+   C:\Models\SentenceTransformer\ ← sentence-transformers/all-MiniLM-L6-v2
    ```
 
-2. Install vision dependencies:
+2. Vision dependencies are included in `requirements.txt` — install with:
    ```bash
-   pip install transformers==4.44.0 torch==2.4.0 Pillow==10.4.0 numpy==1.26.4 accelerate==0.33.0
+   pip install -r requirements.txt
    ```
 
 3. Set in `.env`:
    ```
+   MODELS_DIR=C:\Models
+   SENTENCE_MODEL=C:\Models\SentenceTransformer
    USE_MOCK_MODELS=false
    ```
 
-Sentence Transformers (`all-MiniLM-L6-v2`) download automatically on first use.
+Sentence Transformers auto-download from HuggingFace on first use if the local path is empty.
+
+> **Python 3.13 note:** ChromaDB 1.5.9+ is required — it ships a pre-built wheel that avoids the `chroma-hnswlib` C++ compilation issue on Python 3.13.
 
 ---
 
@@ -220,7 +227,9 @@ Test coverage:
 ```
 Sentinel-AI/
 ├── frontend/              # React + Vite SPA
+│   ├── src/styles/        # Design tokens (CSS custom properties, keyframes)
 │   ├── src/components/    # 34+ UI components
+│   │   ├── primitives/           # StatusPill, RingGauge, SeverityBadge, Panel
 │   │   ├── SitrepPanel.jsx       # AI Situation Report
 │   │   ├── AIExplanationCard.jsx # Commander decision explanation
 │   │   ├── HandoverPanel.jsx     # Shift handover briefing
@@ -290,6 +299,10 @@ Sentinel-AI/
 - [x] SITREP, decision explanation, handover, and AAR generation
 - [x] Graceful fallback to deterministic templates when Ollama is offline
 - [x] Hybrid agentic AI system (deterministic Commander + generative Reasoning)
+- [x] Full UI/UX rebuild — design token system, primitive components, merged Header
+- [x] Rebuilt Vision, Emergency, and Logistics dashboards to match design spec
+- [x] Stadia Maps dark tile layer (no API key required)
+- [x] Python 3.13 compatibility (ChromaDB 1.5.9 pre-built wheel)
 
 ---
 
